@@ -183,10 +183,10 @@ public class GameField extends KeyPanel implements Runnable{
         else if (key == KeyEvent.VK_SPACE) {
             mino.turn();
         }
-        /**
-         * TODO
-         * 上でhard_drop(一瞬で落とす)
-         */
+        // 上でハードドロップ
+        else if (key == KeyEvent.VK_UP) {
+            mino.hardDrop();
+        }
         // 回転・移動後に再描画
         repaint();
     }

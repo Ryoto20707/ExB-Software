@@ -102,6 +102,13 @@ public abstract class Tetromino{
     }
 
     /**
+     * ブロックを一瞬で落とすハードドロップ
+     */
+    public void hardDrop() {
+        while(!move(DOWN));
+    }
+
+    /**
      * ブロックを回転させる
      */
     public void turn() {
