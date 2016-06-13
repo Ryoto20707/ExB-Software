@@ -9,7 +9,8 @@ public class GameField extends KeyPanel implements Runnable{
     private static final int COL = HEIGHT+1;
     private static final int ROW = WIDTH+2;
     private int[][] field = new int[COL][ROW];
-    private Tetromino mino, nextMino;
+    private boolean hold_flag;
+    private Tetromino mino, nextMino, hold;
     private Random rand;
 
     GameField() {
@@ -22,7 +23,9 @@ public class GameField extends KeyPanel implements Runnable{
     }
 
     public void run() {
+        hold_flag = false;
         mino = createMino(this);
+        nextMino = createMino(this);
         while (true) {
             // ブロックを下方向へ移動する
             boolean isFixed = mino.move(Tetromino.DOWN);
@@ -31,8 +34,9 @@ public class GameField extends KeyPanel implements Runnable{
                     JOptionPane.showMessageDialog(null, "GameOver!");
                 }
                 // 次のブロックをランダムに作成
-                nextMino = createMino(this);
                 mino = nextMino;
+                nextMino = createMino(this);
+                hold_flag = false;
             }
             // ブロックがそろった行を消す
             deleteLine();
@@ -74,7 +78,11 @@ public class GameField extends KeyPanel implements Runnable{
         rand.setSeed(System.currentTimeMillis());
     }
 
-    // 新しいテトロミノを生成
+    /**
+     * 新しいテトロミノをランダムに生成
+     * @param gameField 紐付けするフィールド
+     * @return 作成されたテトロミノ
+     */
     private Tetromino createMino(GameField gameField) {
         int blockNo = rand.nextInt(7);
         switch (blockNo) {
@@ -140,6 +148,43 @@ public class GameField extends KeyPanel implements Runnable{
     }
 
     /**
+     * ホールドを行う
+     * ただし一度行ったらそのミノがつくまで次のホールドはできない
+     */
+    public void hold() {
+        /**
+         * TODO
+         * PositionにSetterを作成
+         */
+        // フラグが付いてない場合のみホールド実行
+        if(!hold_flag) {
+            // 座標を初期位置に
+            mino.pos.x = 4;
+            mino.pos.y = -4;
+            /*
+             * まだ一度もホールドをしたことがない
+             * 新規ブロックを作り次のミノにする
+             */
+            if(hold == null) {
+                hold = mino;
+                mino = nextMino;
+                nextMino = createMino(this);
+            }
+            /*
+             * 一度はした
+             * 現在のミノとホールドを入れ替える
+             */
+            else {
+                Tetromino tmp = mino;
+                mino = hold;
+                hold = tmp;
+            }
+            // フラグをセット。一度地面につくまで変更できない。
+            hold_flag = true;
+        }
+    }
+
+    /**
      * フィールドの描画
      * @param g Graphics
      */
@@ -186,6 +231,9 @@ public class GameField extends KeyPanel implements Runnable{
         // 上でハードドロップ
         else if (key == KeyEvent.VK_UP) {
             mino.hardDrop();
+        }
+        else if (key == KeyEvent.VK_C) {
+            hold();
         }
         // 回転・移動後に再描画
         repaint();
