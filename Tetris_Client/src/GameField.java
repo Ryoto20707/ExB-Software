@@ -43,6 +43,9 @@ public class GameField extends KeyPanel implements Runnable {
                 // 次のブロックをランダムに作成
                 mino = nextMino;
                 nextMino = createMino(this);
+                if (lineholecount == 4) {
+                    linehole = (int) (Math.random() * 10);
+                }
                 hold_flag = false;
                 // せり上がりが4回を超えたら場所を変更
                 if (lineholecount == 4) {
@@ -110,22 +113,23 @@ public class GameField extends KeyPanel implements Runnable {
             if (!minoflag[blockNo]) {
                 minoflag[blockNo] = true;
                 switch (blockNo) {
-                case 0:
-                    return new MinoI(gameField);
-                case 1:
-                    return new MinoO(gameField);
-                case 2:
-                    return new MinoZ(gameField);
-                case 3:
-                    return new MinoL(gameField);
-                case 4:
-                    return new MinoS(gameField);
-                case 5:
-                    return new MinoT(gameField);
-                case 6:
-                    return new MinoJ(gameField);
+                    case 0 :
+                        return new MinoI(gameField);
+                    case 1 :
+                        return new MinoO(gameField);
+                    case 2 :
+                        return new MinoZ(gameField);
+                    case 3 :
+                        return new MinoL(gameField);
+                    case 4 :
+                        return new MinoS(gameField);
+                    case 5 :
+                        return new MinoT(gameField);
+                    case 6 :
+                        return new MinoJ(gameField);
                 }
-            } else {
+            }
+            else {
                 blockNo = (blockNo + 1) % 7;// 1つずらす
                 // 1週したら初期化
                 if (seedMinoNo == blockNo) {
@@ -223,18 +227,18 @@ public class GameField extends KeyPanel implements Runnable {
     // スコア計算
     public void getScore(int lines) {
         switch (lines) {
-        case 1:
-            score += 100;
-            break;
-        case 2:
-            score += 300;
-            break;
-        case 3:
-            score += 500;
-            break;
-        case 4:
-            score += 1000;
-            break;
+            case 1:
+                score += 100;
+                break;
+            case 2:
+                score += 300;
+                break;
+            case 3:
+                score += 500;
+                break;
+            case 4:
+                score += 1000;
+                break;
         }
     }
 
