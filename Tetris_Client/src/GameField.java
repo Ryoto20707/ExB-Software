@@ -11,7 +11,13 @@ public class GameField extends KeyPanel implements Runnable{
     private int[][] field = new int[COL][ROW];
     private boolean hold_flag;
     private Tetromino mino, nextMino, hold;
+    private boolean[] minoflag = new boolean[7];// ミノが偏らないようにするための処理に使う
     private Random rand;
+    private int score;// スコアを保持
+    private int deletedline;// 消えた列数
+    private int nextLines;// 次に送られてくる列数
+    private int linehole;// せり上がるブロックの穴の位置
+    private int lineholecount;// 同じ場所でせり上がった回数
 
     GameField() {
         super();
@@ -26,10 +32,11 @@ public class GameField extends KeyPanel implements Runnable{
         hold_flag = false;
         mino = createMino(this);
         nextMino = createMino(this);
+        linehole = (int) (Math.random() * 10) + 1;
         while (true) {
             // ブロックを下方向へ移動する
             boolean isFixed = mino.move(Tetromino.DOWN);
-            if (isFixed) {  // ブロックが固定されたら
+            if (isFixed) { // ブロックが固定されたら
                 if (isStacked()) {
                     JOptionPane.showMessageDialog(null, "GameOver!");
                 }
@@ -80,11 +87,18 @@ public class GameField extends KeyPanel implements Runnable{
 
     /**
      * 新しいテトロミノをランダムに生成
-     * @param gameField 紐付けするフィールド
+     *
+     * @param gameField
+     *            紐付けするフィールド
      * @return 作成されたテトロミノ
      */
     private Tetromino createMino(GameField gameField) {
+        // ミノが偏らないようにするための処理を追加
         int blockNo = rand.nextInt(7);
+        int seedMinoNo = blockNo;// 乱数で得られたミノ
+        while (true) {
+            if (!minoflag[blockNo]) {
+                minoflag[blockNo] = true;
         switch (blockNo) {
             case 0:
                 return new MinoI(gameField);
@@ -101,13 +115,24 @@ public class GameField extends KeyPanel implements Runnable{
             case 6 :
                 return new MinoJ(gameField);
         }
+            } else {
+                blockNo = (blockNo + 1) % 7;// 1つずらす
+                // 1週したら初期化
+                if (seedMinoNo == blockNo) {
+                    minoflag = new boolean[7];
+                }
+                continue;
+            }
         return null;
+    }
     }
 
     /**
      * 行を消去
      */
     public void deleteLine() {
+        // 何列消えたか数える
+        deletedline = 0;
         for (int y = 0; y < COL - 1; y++) {
             int count = 0;
             for (int x = 1; x < ROW - 1; x++) {
@@ -117,6 +142,7 @@ public class GameField extends KeyPanel implements Runnable{
             }
             // 消去判定
             if (count == ROW - 2) {
+                deletedline++;
                 for (int x = 1; x < ROW - 1; x++) {
                     field[y][x] = 0;
                 }
@@ -184,9 +210,83 @@ public class GameField extends KeyPanel implements Runnable{
         }
     }
 
+    // スコア計算
+    public void getScore(int lines) {
+        switch (lines) {
+        case 1:
+            score += 100;
+            break;
+        case 2:
+            score += 300;
+            break;
+        case 3:
+            score += 500;
+            break;
+        case 4:
+            score += 1000;
+            break;
+        }
+    }
+
+    // 相手に送る列数を数える
+    public int sendLineCount(int lines) {
+        switch (lines) {
+        case 1:
+            return 0;
+        case 2:
+            return 1;
+        case 3:
+            return 2;
+        case 4:
+            return 4;
+        default:
+            return 0;
+        }
+    }
+
+    // 相手に送るブロックの列を計算(相殺あり)
+    public void sendLine(int send) {
+        if (nextLines < send) {
+            pushLine(send - nextLines);
+            nextLines = 0;
+        } else {
+            nextLines -= send;
+        }
+    }
+
+    // 相手にブロックの列を送る処理
+    public void pushLine(int push) {
+
+    }
+
+    // ブロックがせり上がる処理
+    public void riseLine(int rise) {
+        if (rise == 0)
+            return;
+        // 上段をせり上げる
+        for (int ty = 0; ty < COL - rise - 1; ty++) {
+            for (int tx = 1; tx < ROW - 1; tx++) {
+                field[ty][tx] = field[ty + rise][tx];
+            }
+        }
+        // linehole以外を埋める
+        for (int ty = COL - rise - 1; ty < COL - 1; ty++) {
+            for (int tx = 1; tx < ROW - 1; tx++) {
+                if (tx != linehole)
+                    field[ty][tx] = 1;
+                else
+                    field[ty][tx] = 0;
+            }
+        }
+        // 同じ場所でせり上がった回数を数える
+        lineholecount++;
+    }
+
     /**
      * フィールドの描画
-     * @param g Graphics
+     *
+     * @param g
+     *            Graphics
      */
     public void paintComponent(Graphics g) {
         // 背景色
