@@ -243,6 +243,7 @@ public class GameField extends KeyPanel implements Runnable {
                 score += 1000;
                 break;
         }
+        statPanel.changeScore(score);
     }
 
     // 相手に送る列数を数える
