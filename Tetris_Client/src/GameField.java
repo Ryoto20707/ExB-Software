@@ -3,19 +3,33 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.*;
 
-public class GameField extends KeyPanel implements Runnable{
-    private static final int WIDTH  = 10;
+public class GameField extends KeyPanel implements Runnable {
+    private static final int WIDTH = 10;
     private static final int HEIGHT = 22;
-    private static final int COL = HEIGHT+1;
-    private static final int ROW = WIDTH+2;
+    public static final int COL = HEIGHT + 1;
+    public static final int ROW = WIDTH + 2;
     private int[][] field = new int[COL][ROW];
     private boolean hold_flag;
     private Tetromino mino, nextMino, hold;
+    private boolean[] minoflag = new boolean[7];// ミノが偏らないようにするための処理に使う
     private Random rand;
     private String[] attackAlternative = {"NOEFFECT", "SINGLE", "DOUBLE", "TRIPLE", "TETRIS"};
+    private int score;// スコアを保持
+    private int deletedline;// 消えた列数
+    private int nextLines;// 次に送られてくる列数
+    private int linehole;// せり上がるブロックの穴の位置
+    private int lineholecount;// 同じ場所でせり上がった回数
+    private StatPanel statPanel; // 盤面右側のパネル
+    private BlockPanel nextPanel, holdPanel; // 次のブロックとホールドのプレビュー
 
-    GameField() {
+    GameField(StatPanel statPanel) {
         super();
+        setLayout(new BorderLayout());
+        // 各パネルの紐付け
+        this.statPanel = statPanel;
+        this.nextPanel = statPanel.nextPanel;
+        this.holdPanel = statPanel.holdPanel;
+        // 盤面の初期化
         init();
     }
 
@@ -27,6 +41,8 @@ public class GameField extends KeyPanel implements Runnable{
         hold_flag = false;
         mino = createMino(this);
         nextMino = createMino(this);
+        nextPanel.set(nextMino);
+        linehole = (int) (Math.random() * 10) + 1;
         while (true) {
             // ブロックを下方向へ移動する
             boolean isFixed = mino.move(Tetromino.DOWN);
@@ -34,19 +50,38 @@ public class GameField extends KeyPanel implements Runnable{
                 // 盤面変化の情報を送る
                 String filedString = getFieldString();
                 sendFieldInfoToServer(fieldString);    // CommunicationClientのインスタンスに対して適用
+            if (isFixed) { // ブロックが固定されたら
                 if (isStacked()) {
                     JOptionPane.showMessageDialog(null, "GameOver!");
+                    break;
                 }
                 // 次のブロックをランダムに作成
                 mino = nextMino;
                 nextMino = createMino(this);
+                nextPanel.set(nextMino);
+                if (lineholecount == 4) {
+                    linehole = (int) (Math.random() * 10);
+                }
                 hold_flag = false;
+                // せり上がりが4回を超えたら場所を変更
+                if (lineholecount == 4) {
+                    lineholecount = 0;
+                    linehole = (int) (Math.random() * 10) + 1; // 1から10の乱数
+                }
             }
             // ブロックがそろった行を消す
             int attackNum = deleteLine();
 
             // 消した行数に応じて，罰ゲームに関する情報を送る
             while(sendAttackInfoToServer(attackAlternative[attackNum]) == -1); // CommunicationClientのインスタンスに対して適用
+
+            deleteLine();
+            // スコアを加算する
+            getScore(deletedline);
+            // 相殺込みで何列送るか計算して送る
+            sendLine(sendLineCount(deletedline));
+            // ブロックせり上がり処理
+            riseLine(nextLines);
             repaint();
 
             try {
@@ -66,8 +101,7 @@ public class GameField extends KeyPanel implements Runnable{
                 // 壁をすべて埋める
                 if (x == 0 || x == ROW - 1) {
                     field[y][x] = 1;
-                }
-                else if (y == COL - 1) {
+                } else if (y == COL - 1) {
                     field[y][x] = 1;
                 }
                 // フィールド内は埋めない
@@ -87,28 +121,45 @@ public class GameField extends KeyPanel implements Runnable{
 
     /**
      * 新しいテトロミノをランダムに生成
-     * @param gameField 紐付けするフィールド
+     *
+     * @param gameField
+     *            紐付けするフィールド
      * @return 作成されたテトロミノ
      */
     private Tetromino createMino(GameField gameField) {
+        // ミノが偏らないようにするための処理を追加
         int blockNo = rand.nextInt(7);
-        switch (blockNo) {
-            case 0:
-                return new MinoI(gameField);
-            case 1 :
-                return new MinoO(gameField);
-            case 2 :
-                return new MinoZ(gameField);
-            case 3 :
-                return new MinoL(gameField);
-            case 4 :
-                return new MinoS(gameField);
-            case 5 :
-                return new MinoT(gameField);
-            case 6 :
-                return new MinoJ(gameField);
+        int seedMinoNo = blockNo;// 乱数で得られたミノ
+        while (true) {
+            if (!minoflag[blockNo]) {
+                minoflag[blockNo] = true;
+                switch (blockNo) {
+                    case 0 :
+                        return new MinoI(gameField);
+                    case 1 :
+                        return new MinoO(gameField);
+                    case 2 :
+                        return new MinoZ(gameField);
+                    case 3 :
+                        return new MinoL(gameField);
+                    case 4 :
+                        return new MinoS(gameField);
+                    case 5 :
+                        return new MinoT(gameField);
+                    case 6 :
+                        return new MinoJ(gameField);
+                }
+            }
+            else {
+                blockNo = (blockNo + 1) % 7;// 1つずらす
+                // 1週したら初期化
+                if (seedMinoNo == blockNo) {
+                    minoflag = new boolean[7];
+                }
+                continue;
+            }
+            return null;
         }
-        return null;
     }
 
     /**
@@ -128,7 +179,8 @@ public class GameField extends KeyPanel implements Runnable{
      * 行を消去
      */
     public int deleteLine() {
-        int numberOfDeletedLine = 0;
+        // 何列消えたか数える
+        deletedline = 0;
         for (int y = 0; y < COL - 1; y++) {
             int count = 0;
             for (int x = 1; x < ROW - 1; x++) {
@@ -138,7 +190,7 @@ public class GameField extends KeyPanel implements Runnable{
             }
             // 消去判定
             if (count == ROW - 2) {
-                numberOfDeletedLine++;
+                deletedline++;
                 for (int x = 1; x < ROW - 1; x++) {
                     field[y][x] = 0;
                 }
@@ -150,19 +202,23 @@ public class GameField extends KeyPanel implements Runnable{
                 }
             }
         }
-        return numberOfDeletedLine;
+        return deletedline;
     }
 
     /**
      * 現在の場所にテトロミノを固定する
-     * @param pos 座標
-     * @param block 形状
+     *
+     * @param pos
+     *            座標
+     * @param block
+     *            形状
      */
     public void fixBlock(Point pos, int[][] block) {
         for (int i = 0; i < Tetromino.ROW; i++) {
             for (int j = 0; j < Tetromino.COL; j++) {
                 if (block[i][j] == 1) {
-                    if (pos.y + i < 0) continue;
+                    if (pos.y + i < 0)
+                        continue;
                     // フィールドに埋め込む
                     field[pos.y + i][pos.x + j] = 1;
                 }
@@ -171,45 +227,123 @@ public class GameField extends KeyPanel implements Runnable{
     }
 
     /**
-     * ホールドを行う
-     * ただし一度行ったらそのミノがつくまで次のホールドはできない
+     * ホールドを行う ただし一度行ったらそのミノがつくまで次のホールドはできない
      */
     public void hold() {
         /**
-         * TODO
-         * PositionにSetterを作成
+         * TODO PositionにSetterを作成
          */
         // フラグが付いてない場合のみホールド実行
-        if(!hold_flag) {
+        if (!hold_flag) {
             // 座標を初期位置に
             mino.pos.x = 4;
             mino.pos.y = -4;
             /*
-             * まだ一度もホールドをしたことがない
-             * 新規ブロックを作り次のミノにする
+             * まだ一度もホールドをしたことがない 新規ブロックを作り次のミノにする
              */
-            if(hold == null) {
+            if (hold == null) {
+                // 現在のミノをホールドに送りパネルにセット
                 hold = mino;
+                holdPanel.set(hold);
+                // 次のミノを更新しパネルにセット
                 mino = nextMino;
                 nextMino = createMino(this);
+                nextPanel.set(nextMino);
             }
             /*
-             * 一度はした
-             * 現在のミノとホールドを入れ替える
+             * 一度はした 現在のミノとホールドを入れ替える
              */
             else {
+                // スワップ
                 Tetromino tmp = mino;
                 mino = hold;
                 hold = tmp;
+                // パネルにセット
+                holdPanel.set(hold);
             }
             // フラグをセット。一度地面につくまで変更できない。
             hold_flag = true;
         }
     }
 
+    // スコア計算
+    public void getScore(int lines) {
+        switch (lines) {
+            case 1:
+                score += 100;
+                break;
+            case 2:
+                score += 300;
+                break;
+            case 3:
+                score += 500;
+                break;
+            case 4:
+                score += 1000;
+                break;
+        }
+        statPanel.changeScore(score);
+    }
+
+    // 相手に送る列数を数える
+    public int sendLineCount(int lines) {
+        switch (lines) {
+        case 1:
+            return 0;
+        case 2:
+            return 1;
+        case 3:
+            return 2;
+        case 4:
+            return 4;
+        default:
+            return 0;
+        }
+    }
+
+    // 相手に送るブロックの列を計算(相殺あり)
+    public void sendLine(int send) {
+        if (nextLines < send) {
+            pushLine(send - nextLines);
+            nextLines = 0;
+        } else {
+            nextLines -= send;
+        }
+    }
+
+    // 相手にブロックの列を送る処理
+    public void pushLine(int push) {
+
+    }
+
+    // ブロックがせり上がる処理
+    public void riseLine(int rise) {
+        if (rise == 0)
+            return;
+        // 上段をせり上げる
+        for (int ty = 0; ty < COL - rise - 1; ty++) {
+            for (int tx = 1; tx < ROW - 1; tx++) {
+                field[ty][tx] = field[ty + rise][tx];
+            }
+        }
+        // linehole以外を埋める
+        for (int ty = COL - rise - 1; ty < COL - 1; ty++) {
+            for (int tx = 1; tx < ROW - 1; tx++) {
+                if (tx != linehole)
+                    field[ty][tx] = 1;
+                else
+                    field[ty][tx] = 0;
+            }
+        }
+        // 同じ場所でせり上がった回数を数える
+        lineholecount++;
+    }
+
     /**
      * フィールドの描画
-     * @param g Graphics
+     *
+     * @param g
+     *            Graphics
      */
     public void paintComponent(Graphics g) {
         // 背景色
@@ -221,8 +355,7 @@ public class GameField extends KeyPanel implements Runnable{
         for (int y = 0; y < COL; y++) {
             for (int x = 0; x < ROW; x++) {
                 if (field[y][x] == 1) {
-                    g.fillRect(x * Window.TILE_SIZE, y *  Window.TILE_SIZE,  Window.TILE_SIZE,
-                            Window.TILE_SIZE);
+                    g.fillRect(x * Window.TILE_SIZE, y * Window.TILE_SIZE, Window.TILE_SIZE, Window.TILE_SIZE);
                 }
             }
         }
@@ -254,8 +387,7 @@ public class GameField extends KeyPanel implements Runnable{
         // 上でハードドロップ
         else if (key == KeyEvent.VK_UP) {
             mino.hardDrop();
-        }
-        else if (key == KeyEvent.VK_C) {
+        } else if (key == KeyEvent.VK_C) {
             hold();
         }
         // 回転・移動後に再描画
@@ -267,24 +399,27 @@ public class GameField extends KeyPanel implements Runnable{
 
     /**
      * ブロックを移動できるか調べる
-     * @param newPos ブロックの移動先座標
-     * @param block ブロック
+     *
+     * @param newPos
+     *            ブロックの移動先座標
+     * @param block
+     *            ブロック
      * @return boolean 移動できたらtrue
      */
     public boolean isMovable(Point newPos, int[][] block) {
         // 各座標において衝突判定
-        for (int i=0; i<Tetromino.ROW; i++) {
-            for (int j=0; j<Tetromino.COL; j++) {
+        for (int i = 0; i < Tetromino.ROW; i++) {
+            for (int j = 0; j < Tetromino.COL; j++) {
                 if (block[i][j] == 1) {
                     // ミノが見えきってない時
                     if (newPos.y + i < 0) {
                         // 横の壁（ただし画面外は描画していない）にめり込む時不可
-                        if (newPos.x + j <= 0 || newPos.x+j >= COL-1) {
+                        if (newPos.x + j <= 0 || newPos.x + j >= COL - 1) {
                             return false;
                         }
                     }
                     // 移動先に壁や他のミノがある時不可
-                    else if (field[newPos.y+i][newPos.x+j] == 1) {
+                    else if (field[newPos.y + i][newPos.x + j] == 1) {
                         return false;
                     }
                 }
@@ -295,6 +430,7 @@ public class GameField extends KeyPanel implements Runnable{
 
     /**
      * ミノが画面に積みきってしまったか調べる（ゲームオーバー判定）
+     *
      * @return boolean 上端まできたらtrue
      */
     public boolean isStacked() {

@@ -1,5 +1,4 @@
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -8,7 +7,7 @@ import java.awt.event.KeyListener;
 class Window extends JFrame implements KeyListener{
     // 画面の大きさ（ピクセル単位）
     public static final int WIDTH  = 400;
-    public static final int HEIGHT = 600;
+    public static final int HEIGHT = 570;
     // 1マスあたりのピクセル数
     public static final int TILE_SIZE = 24;
 
@@ -21,7 +20,7 @@ class Window extends JFrame implements KeyListener{
     private KeyPanel current;
     // 実際に使用する画面たち
     private KeyPanel title, modeSelect, result;
-    private GameField play;
+    private GamePanel gamePanel;
 
 
     Window() {
@@ -59,10 +58,10 @@ class Window extends JFrame implements KeyListener{
                 break;
             case PLAY:
                 current.setVisible(false);
-                current = play;
+                current = gamePanel;
                 current.setVisible(true);
-                play.init();
-                play.start(); // ゲームを開始する
+                gamePanel.init();
+                gamePanel.start(); // ゲームを開始する
                 break;
             case RESULT:
                 break;
@@ -107,7 +106,7 @@ class Window extends JFrame implements KeyListener{
 
             }
         };
-        play       = new GameField();
+        gamePanel  = new GamePanel();
         // title
         JButton startButton = new JButton("はじめる");
         startButton.addActionListener(new ActionListener() {
@@ -134,13 +133,13 @@ class Window extends JFrame implements KeyListener{
         // all
         title.     setSize(WIDTH, HEIGHT);
         modeSelect.setSize(WIDTH, HEIGHT);
-        play.      setSize(WIDTH, HEIGHT);
+        gamePanel. setSize(WIDTH, HEIGHT);
         title.     setVisible(false);
         modeSelect.setVisible(false);
-        play.      setVisible(false);
+        gamePanel .setVisible(false);
         add(title);
         add(modeSelect);
-        add(play);
+        add(gamePanel);
     }
 
     /*
