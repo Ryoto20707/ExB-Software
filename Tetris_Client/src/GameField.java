@@ -6,8 +6,8 @@ import java.util.*;
 public class GameField extends KeyPanel implements Runnable {
     private static final int WIDTH = 10;
     private static final int HEIGHT = 22;
-    private static final int COL = HEIGHT + 1;
-    private static final int ROW = WIDTH + 2;
+    public static final int COL = HEIGHT + 1;
+    public static final int ROW = WIDTH + 2;
     private int[][] field = new int[COL][ROW];
     private boolean hold_flag;
     private Tetromino mino, nextMino, hold;
@@ -18,9 +18,12 @@ public class GameField extends KeyPanel implements Runnable {
     private int nextLines;// 次に送られてくる列数
     private int linehole;// せり上がるブロックの穴の位置
     private int lineholecount;// 同じ場所でせり上がった回数
+    private StatPanel statPanel;
 
-    GameField() {
+    GameField(StatPanel statPanel) {
         super();
+        setLayout(new BorderLayout());
+        this.statPanel = statPanel;
         init();
     }
 
