@@ -18,12 +18,17 @@ public class GameField extends KeyPanel implements Runnable {
     private int nextLines;// 次に送られてくる列数
     private int linehole;// せり上がるブロックの穴の位置
     private int lineholecount;// 同じ場所でせり上がった回数
-    private StatPanel statPanel;
+    private StatPanel statPanel; // 盤面右側のパネル
+    private BlockPanel nextPanel, holdPanel; // 次のブロックとホールドのプレビュー
 
     GameField(StatPanel statPanel) {
         super();
         setLayout(new BorderLayout());
+        // 各パネルの紐付け
         this.statPanel = statPanel;
+        this.nextPanel = statPanel.nextPanel;
+        this.holdPanel = statPanel.holdPanel;
+        // 盤面の初期化
         init();
     }
 
@@ -35,6 +40,7 @@ public class GameField extends KeyPanel implements Runnable {
         hold_flag = false;
         mino = createMino(this);
         nextMino = createMino(this);
+        nextPanel.set(nextMino);
         linehole = (int) (Math.random() * 10) + 1;
         while (true) {
             // ブロックを下方向へ移動する
@@ -42,10 +48,12 @@ public class GameField extends KeyPanel implements Runnable {
             if (isFixed) { // ブロックが固定されたら
                 if (isStacked()) {
                     JOptionPane.showMessageDialog(null, "GameOver!");
+                    break;
                 }
                 // 次のブロックをランダムに作成
                 mino = nextMino;
                 nextMino = createMino(this);
+                nextPanel.set(nextMino);
                 if (lineholecount == 4) {
                     linehole = (int) (Math.random() * 10);
                 }
@@ -210,17 +218,24 @@ public class GameField extends KeyPanel implements Runnable {
              * まだ一度もホールドをしたことがない 新規ブロックを作り次のミノにする
              */
             if (hold == null) {
+                // 現在のミノをホールドに送りパネルにセット
                 hold = mino;
+                holdPanel.set(hold);
+                // 次のミノを更新しパネルにセット
                 mino = nextMino;
                 nextMino = createMino(this);
+                nextPanel.set(nextMino);
             }
             /*
              * 一度はした 現在のミノとホールドを入れ替える
              */
             else {
+                // スワップ
                 Tetromino tmp = mino;
                 mino = hold;
                 hold = tmp;
+                // パネルにセット
+                holdPanel.set(hold);
             }
             // フラグをセット。一度地面につくまで変更できない。
             hold_flag = true;
