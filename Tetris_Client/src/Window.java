@@ -120,12 +120,15 @@ class Window extends JFrame implements KeyListener{
         // modeSelect
         JButton onePlayer  = new JButton("ひとりであそぶ");
         JButton twoPlayers = new JButton("ふたりであそぶ");
-        onePlayer.addActionListener(new ActionListener() {
+        onePlayer.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
                 change(WINDOW_MODE.PLAY);
             }
         });
+//        twoPlayers.addActionListener(new ActeionListener(){
+//            //
+//        });
         modeSelect.add(onePlayer);
         modeSelect.add(twoPlayers);
         // all

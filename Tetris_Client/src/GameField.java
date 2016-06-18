@@ -12,6 +12,7 @@ public class GameField extends KeyPanel implements Runnable{
     private boolean hold_flag;
     private Tetromino mino, nextMino, hold;
     private Random rand;
+    private String[] attackAlternative = {"NOEFFECT", "SINGLE", "DOUBLE", "TRIPLE", "TETRIS"};
 
     GameField() {
         super();
@@ -30,6 +31,9 @@ public class GameField extends KeyPanel implements Runnable{
             // ブロックを下方向へ移動する
             boolean isFixed = mino.move(Tetromino.DOWN);
             if (isFixed) {  // ブロックが固定されたら
+                // 盤面変化の情報を送る
+                String filedString = getFieldString();
+                sendFieldInfoToServer(fieldString);    // CommunicationClientのインスタンスに対して適用
                 if (isStacked()) {
                     JOptionPane.showMessageDialog(null, "GameOver!");
                 }
@@ -39,7 +43,10 @@ public class GameField extends KeyPanel implements Runnable{
                 hold_flag = false;
             }
             // ブロックがそろった行を消す
-            deleteLine();
+            int attackNum = deleteLine();
+
+            // 消した行数に応じて，罰ゲームに関する情報を送る
+            while(sendAttackInfoToServer(attackAlternative[attackNum]) == -1); // CommunicationClientのインスタンスに対して適用
             repaint();
 
             try {
@@ -105,9 +112,23 @@ public class GameField extends KeyPanel implements Runnable{
     }
 
     /**
+     * 盤面の状況を（壁の状況も含めて)String化する
+     */
+    private String getFieldString(){
+        // 高速化できる
+        StringBuffer ret = new StringBuffer();
+        for(int i = 0; i < COL; i++)
+            for (int j = 0; j < ROW; j++)
+                ret.append(String.valueOf(field[i][j]));
+        return ret.toString();
+    }
+
+
+    /**
      * 行を消去
      */
-    public void deleteLine() {
+    public int deleteLine() {
+        int numberOfDeletedLine = 0;
         for (int y = 0; y < COL - 1; y++) {
             int count = 0;
             for (int x = 1; x < ROW - 1; x++) {
@@ -117,6 +138,7 @@ public class GameField extends KeyPanel implements Runnable{
             }
             // 消去判定
             if (count == ROW - 2) {
+                numberOfDeletedLine++;
                 for (int x = 1; x < ROW - 1; x++) {
                     field[y][x] = 0;
                 }
@@ -128,6 +150,7 @@ public class GameField extends KeyPanel implements Runnable{
                 }
             }
         }
+        return numberOfDeletedLine;
     }
 
     /**
