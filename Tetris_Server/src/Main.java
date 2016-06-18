@@ -10,6 +10,7 @@ public class Main extends Thread{
     public static PrintWriter out2;
     private static String name1;
     private static String name2;
+    private static ServerSocket s; // フィールドに変更
     private static Socket socket1;  // player1から受け付ける用
     private static Socket socket2;  // player2から受け付ける用
 
@@ -24,7 +25,7 @@ public class Main extends Thread{
 
 
     public static void main(String[] args) throws IOException {
-        ServerSocket s = new ServerSocket(PORT);
+        s = new ServerSocket(PORT);
         System.out.println("Server起動(port=" + PORT + ")");
         try {
             socket1 = s.accept();
@@ -33,8 +34,8 @@ public class Main extends Thread{
                 socket2 = s.accept();
                 acceptPlayer2(socket2);
                 //-----------
-                Main ch1 = new Main(in1, name1);
-                Main ch2 = new Main(in2, name2);
+                Thread th1 = new Thread(new Main(in1, name1));
+                Thread th2 = new Thread(new Main(in2, name2));
                 th1.start();
                 th2.start();
                 // ---------
@@ -86,7 +87,7 @@ public class Main extends Thread{
      * ・attackInfo  "attack:<player>:<attackinfo>"
      * ・the End of Game (未開発)
      */
-    private doAction(String str){
+    private void doAction(String str){
         switch (str.charAt(0)){
             case 'a':  // fieldInfo
                 if(str.charAt(6) == '1')  fallBlock(2, str.substring(8));
@@ -101,6 +102,10 @@ public class Main extends Thread{
                 break;
 
         }
+    }
+
+    private void displayResult() {
+        // 勝敗結果を表示する
     }
 
     private void fallBlock(int target, String attackInfo){
