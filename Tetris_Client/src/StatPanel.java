@@ -38,9 +38,10 @@ public class StatPanel extends JPanel {
         add(scoreTitle);
         // スコアのラベル、初期値0
         scoreDisp = new JLabel("0");
-        scoreDisp.setFont(new Font(null, Font.PLAIN, 20));
         scoreDisp.setVisible(true);
-        scoreDisp.setBounds(30, 274, 40, 20);
+        scoreDisp.setBounds(20, 278, 80, 20);
+        scoreDisp.setBackground(Color.LIGHT_GRAY);
+        scoreDisp.setOpaque(true);
         add(scoreDisp);
     }
 

@@ -2,9 +2,6 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 
-/**
- * Created by TairaTsuchiya on 2016/06/18.
- */
 public class CommunicationClient extends Thread{
     private String myName;
     private InetAddress addr;

@@ -18,7 +18,7 @@ public abstract class Tetromino{
     Point pos;
     GameField field;
 
-    Color color;
+    public static Color color;
 
     /**
      * テトロミノの初期化
@@ -46,9 +46,9 @@ public abstract class Tetromino{
     public void drawInPanel(Graphics g) {
         for (int i = 0; i < ROW; i++) {
             for (int j = 0; j < COL; j++) {
-                if (block[i][j] == 1) {
+                if (block[i][j] > 1) {
                     // ブロックの描画
-                    g.setColor(color);
+                    g.setColor(getColor(block[i][j]));
                     g.fillRect((pos.x + j) *  TILE_SIZE,
                             (pos.y + i) *  TILE_SIZE,  TILE_SIZE,  TILE_SIZE);
                     // 枠線の描画
@@ -145,4 +145,26 @@ public abstract class Tetromino{
         return turnedBlock;
     }
 
+    public static Color getColor(int tile) {
+        switch (tile) {
+            case 1 :
+                return Color.LIGHT_GRAY;
+            case 2 :
+                return MinoI.color;
+            case 3 :
+                return MinoJ.color;
+            case 4 :
+                return MinoL.color;
+            case 5 :
+                return MinoO.color;
+            case 6 :
+                return MinoS.color;
+            case 7 :
+                return MinoT.color;
+            case 8 :
+                return MinoZ.color;
+            default :
+                return Color.BLACK;
+        }
+    }
 }

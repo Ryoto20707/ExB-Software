@@ -19,9 +19,9 @@ public class BlockPanel extends JPanel {
         if (mino != null) {
             for (int i = 0; i < Tetromino.ROW; i++) {
                 for (int j = 0; j < Tetromino.COL; j++) {
-                    if (mino.block[i][j] == 1) {
+                    if (mino.block[i][j] > 0) {
                         // ブロックの描画
-                        g.setColor(mino.color);
+                        g.setColor(Tetromino.getColor(mino.block[i][j]));
                         g.fillRect(j *  MINI_TILE_SIZE + 10, i *  MINI_TILE_SIZE + 10, MINI_TILE_SIZE, MINI_TILE_SIZE);
                         // 枠線の描画
                         g.setColor(Color.WHITE);

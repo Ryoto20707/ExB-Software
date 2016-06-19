@@ -8,6 +8,7 @@ public class GameField extends KeyPanel implements Runnable {
     private static final int HEIGHT = 22;
     public static final int COL = HEIGHT + 1;
     public static final int ROW = WIDTH + 2;
+    private static int TILE_SIZE = Window.TILE_SIZE;
     private int[][] field = new int[COL][ROW];
     private boolean hold_flag;
     private Tetromino mino, nextMino, hold;
@@ -49,8 +50,7 @@ public class GameField extends KeyPanel implements Runnable {
             if (isFixed) {  // ブロックが固定されたら
                 // 盤面変化の情報を送る
                 String filedString = getFieldString();
-                sendFieldInfoToServer(fieldString);    // CommunicationClientのインスタンスに対して適用
-            if (isFixed) { // ブロックが固定されたら
+//                sendFieldInfoToServer(fieldString);    // CommunicationClientのインスタンスに対して適用
                 if (isStacked()) {
                     JOptionPane.showMessageDialog(null, "GameOver!");
                     break;
@@ -73,9 +73,8 @@ public class GameField extends KeyPanel implements Runnable {
             int attackNum = deleteLine();
 
             // 消した行数に応じて，罰ゲームに関する情報を送る
-            while(sendAttackInfoToServer(attackAlternative[attackNum]) == -1); // CommunicationClientのインスタンスに対して適用
+//            while(sendAttackInfoToServer(attackAlternative[attackNum]) == -1); // CommunicationClientのインスタンスに対して適用
 
-            deleteLine();
             // スコアを加算する
             getScore(deletedline);
             // 相殺込みで何列送るか計算して送る
@@ -185,7 +184,7 @@ public class GameField extends KeyPanel implements Runnable {
             int count = 0;
             for (int x = 1; x < ROW - 1; x++) {
                 // ブロックがある列の数を数える
-                if (field[y][x] == 1)
+                if (field[y][x] > 0)
                     count++;
             }
             // 消去判定
@@ -216,11 +215,11 @@ public class GameField extends KeyPanel implements Runnable {
     public void fixBlock(Point pos, int[][] block) {
         for (int i = 0; i < Tetromino.ROW; i++) {
             for (int j = 0; j < Tetromino.COL; j++) {
-                if (block[i][j] == 1) {
+                if (block[i][j] > 1) {
                     if (pos.y + i < 0)
                         continue;
                     // フィールドに埋め込む
-                    field[pos.y + i][pos.x + j] = 1;
+                    field[pos.y + i][pos.x + j] = block[i][j];
                 }
             }
         }
@@ -350,12 +349,23 @@ public class GameField extends KeyPanel implements Runnable {
         g.setColor(Color.BLACK);
         g.fillRect(0, 0, Window.WIDTH, Window.HEIGHT);
 
-        // 枠線
-        g.setColor(Color.LIGHT_GRAY);
         for (int y = 0; y < COL; y++) {
             for (int x = 0; x < ROW; x++) {
-                if (field[y][x] == 1) {
-                    g.fillRect(x * Window.TILE_SIZE, y * Window.TILE_SIZE, Window.TILE_SIZE, Window.TILE_SIZE);
+                if (field[y][x] > 0) {
+                    g.setColor(Tetromino.getColor(field[y][x]));
+                    g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    if (field[y][x] > 1) {
+                        // 枠線の描画
+                        g.setColor(Color.WHITE);
+                        g.drawLine( x      * TILE_SIZE,  y      *  TILE_SIZE,
+                                   (x + 1) * TILE_SIZE,  y      *  TILE_SIZE);
+                        g.drawLine( x      * TILE_SIZE,  y      *  TILE_SIZE,
+                                    x      * TILE_SIZE, (y + 1) *  TILE_SIZE);
+                        g.drawLine((x + 1) * TILE_SIZE,  y      *  TILE_SIZE,
+                                   (x + 1) * TILE_SIZE, (y + 1) *  TILE_SIZE);
+                        g.drawLine( x      * TILE_SIZE, (y + 1) *  TILE_SIZE,
+                                   (x + 1) * TILE_SIZE, (y + 1) *  TILE_SIZE);
+                    }
                 }
             }
         }
@@ -410,7 +420,7 @@ public class GameField extends KeyPanel implements Runnable {
         // 各座標において衝突判定
         for (int i = 0; i < Tetromino.ROW; i++) {
             for (int j = 0; j < Tetromino.COL; j++) {
-                if (block[i][j] == 1) {
+                if (block[i][j] > 0) {
                     // ミノが見えきってない時
                     if (newPos.y + i < 0) {
                         // 横の壁（ただし画面外は描画していない）にめり込む時不可
@@ -419,7 +429,7 @@ public class GameField extends KeyPanel implements Runnable {
                         }
                     }
                     // 移動先に壁や他のミノがある時不可
-                    else if (field[newPos.y + i][newPos.x + j] == 1) {
+                    else if (field[newPos.y + i][newPos.x + j] > 0) {
                         return false;
                     }
                 }
@@ -435,7 +445,7 @@ public class GameField extends KeyPanel implements Runnable {
      */
     public boolean isStacked() {
         for (int x = 1; x < WIDTH + 1; x++) {
-            if (field[0][x] == 1) {
+            if (field[0][x] > 0) {
                 return true;
             }
         }
