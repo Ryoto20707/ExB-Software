@@ -101,7 +101,7 @@ public class GameField extends KeyPanel implements Runnable {
             repaint();
 
             try {
-                Thread.sleep(550-level*50); // レベルが上がると猶予が小さくなる
+                Thread.sleep(300-level*25); // レベルが上がると猶予が小さくなる
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
