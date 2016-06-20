@@ -40,12 +40,14 @@ public class GameField extends KeyPanel implements Runnable {
 
     public void run() {
         try {
+            // カウントダウン
             statPanel.message.setText("3");
             Thread.sleep(1000);
             statPanel.message.setText("2");
             Thread.sleep(1000);
             statPanel.message.setText("1");
             Thread.sleep(1000);
+            // Startの表示とゲームの開始は非同期にする
             statPanel.setMessage("Start", 1000);
         }
         catch (InterruptedException e) {

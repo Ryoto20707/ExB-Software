@@ -68,6 +68,12 @@ public class StatPanel extends JPanel {
         g.fillRect(0, 0, getWidth(), getHeight());
     }
 
+    /**
+     * メッセージを指定時間表示する。
+     * 別スレッドで実行することで本来の操作を止めない。
+     * @param msg 表示メッセージ
+     * @param time 表示時間
+     */
     public void setMessage(String msg, final int time) {
         message.setText(msg);
        new Thread(new Runnable() {
