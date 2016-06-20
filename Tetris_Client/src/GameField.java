@@ -57,7 +57,6 @@ public class GameField extends KeyPanel implements Runnable {
         mino = createMino(this);
         nextMino = createMino(this);
         nextPanel.set(nextMino);
-        linehole = (int) (Math.random() * 10) + 1;
         while (true) {
             // ブロックを下方向へ移動する
             boolean isFixed = mino.move(Tetromino.DOWN);
@@ -65,7 +64,20 @@ public class GameField extends KeyPanel implements Runnable {
                 // 盤面変化の情報を送る
                 String filedString = getFieldString();
 //                sendFieldInfoToServer(fieldString);    // CommunicationClientのインスタンスに対して適用
+                // ブロックがそろった行を消す
+                int attackNum = deleteLine();
+
+            // 消した行数に応じて，罰ゲームに関する情報を送る
+//            while(sendAttackInfoToServer(attackAlternative[attackNum]) == -1); // CommunicationClientのインスタンスに対して適用
+                // スコアを加算する
+                getScore(deletedline);
+                // 相殺込みで何列送るか計算して送る
+                sendLine(sendLineCount(deletedline));
+                // ブロックせり上がり処理
+                riseLine(nextLines);
+
                 if (isStacked()) {
+                    repaint(); // ゲームオーバー後にも更新
                     JOptionPane.showMessageDialog(null, "GameOver!");
                     break;
                 }
@@ -73,9 +85,6 @@ public class GameField extends KeyPanel implements Runnable {
                 mino = nextMino;
                 nextMino = createMino(this);
                 nextPanel.set(nextMino);
-                if (lineholecount == 4) {
-                    linehole = (int) (Math.random() * 10);
-                }
                 hold_flag = false;
                 // せり上がりが4回を超えたら場所を変更
                 if (lineholecount == 4) {
@@ -83,18 +92,7 @@ public class GameField extends KeyPanel implements Runnable {
                     linehole = (int) (Math.random() * 10) + 1; // 1から10の乱数
                 }
             }
-            // ブロックがそろった行を消す
-            int attackNum = deleteLine();
 
-            // 消した行数に応じて，罰ゲームに関する情報を送る
-//            while(sendAttackInfoToServer(attackAlternative[attackNum]) == -1); // CommunicationClientのインスタンスに対して適用
-
-            // スコアを加算する
-            getScore(deletedline);
-            // 相殺込みで何列送るか計算して送る
-            sendLine(sendLineCount(deletedline));
-            // ブロックせり上がり処理
-            riseLine(nextLines);
             repaint();
 
             try {
@@ -130,6 +128,9 @@ public class GameField extends KeyPanel implements Runnable {
         // 落下ミノ選択用乱数
         rand = new Random();
         rand.setSeed(System.currentTimeMillis());
+
+        // 最初の穴の位置を決定
+        linehole = (int) (Math.random() * 10) + 1;
     }
 
     /**
