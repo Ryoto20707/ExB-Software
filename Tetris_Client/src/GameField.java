@@ -39,6 +39,18 @@ public class GameField extends KeyPanel implements Runnable {
     }
 
     public void run() {
+        try {
+            statPanel.message.setText("3");
+            Thread.sleep(1000);
+            statPanel.message.setText("2");
+            Thread.sleep(1000);
+            statPanel.message.setText("1");
+            Thread.sleep(1000);
+            statPanel.setMessage("Start", 1000);
+        }
+        catch (InterruptedException e) {
+
+        }
         hold_flag = false;
         mino = createMino(this);
         nextMino = createMino(this);
@@ -370,7 +382,12 @@ public class GameField extends KeyPanel implements Runnable {
             }
         }
         // テトロミノを描画
-        mino.drawInPanel(g);
+        try {
+            mino.drawInPanel(g);
+        }
+        catch (NullPointerException e) {
+
+        }
     }
 
     public void keyTyped(KeyEvent e) {

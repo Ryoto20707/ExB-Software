@@ -6,6 +6,7 @@ public class StatPanel extends JPanel {
     JLabel holdTitle;  // "Hold"ラベル
     JLabel scoreTitle; // "Score"ラベル
     JLabel scoreDisp;  // 実際のスコアを記入
+    JLabel message;    // メッセージ
     BlockPanel nextPanel; // 次のミノのプレビュー
     BlockPanel holdPanel; // ホールドのプレビュー
 
@@ -43,6 +44,13 @@ public class StatPanel extends JPanel {
         scoreDisp.setBackground(Color.LIGHT_GRAY);
         scoreDisp.setOpaque(true);
         add(scoreDisp);
+        // メッセージ
+        message = new JLabel();
+        message.setVisible(true);
+        message.setBounds(20, 320, 80, 60);
+        message.setBackground(Color.LIGHT_GRAY);
+        message.setOpaque(true);
+        add(message);
     }
 
     /**
@@ -56,5 +64,23 @@ public class StatPanel extends JPanel {
 
     @Override
     public void paintComponent(Graphics g) {
+        g.setColor(Color.CYAN);
+        g.fillRect(0, 0, getWidth(), getHeight());
+    }
+
+    public void setMessage(String msg, final int time) {
+        message.setText(msg);
+       new Thread(new Runnable() {
+           @Override
+           public void run() {
+               try {
+                   Thread.sleep(time);
+                   message.setText("");
+               }
+               catch (InterruptedException e) {
+
+               }
+           }
+       }).start();
     }
 }
