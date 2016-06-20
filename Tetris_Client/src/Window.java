@@ -13,7 +13,7 @@ class Window extends JFrame implements KeyListener{
 
     // 画面の種類
     private enum WINDOW_MODE {
-        TITLE, MODE_SELECT, PLAY, RESULT
+        TITLE, MODE_SELECT, PLAY, DOUBLE_PLAY, RESULT
     }
 
     // 現在の画面（他の具体的な画面への参照とする）
@@ -21,6 +21,7 @@ class Window extends JFrame implements KeyListener{
     // 実際に使用する画面たち
     private KeyPanel title, modeSelect, result;
     private GamePanel gamePanel;
+    private DoubleGamePanel doubleGamePanel;
 
 
     Window() {
@@ -60,8 +61,14 @@ class Window extends JFrame implements KeyListener{
                 current.setVisible(false);
                 current = gamePanel;
                 current.setVisible(true);
-                gamePanel.init();
                 gamePanel.start(); // ゲームを開始する
+                break;
+            case DOUBLE_PLAY:
+                current.setVisible(false);
+                setSize(DoubleGamePanel.WIDTH, DoubleGamePanel.HEIGHT);
+                current = doubleGamePanel;
+                current.setVisible(true);
+                doubleGamePanel.start(); // ゲームを開始する
                 break;
             case RESULT:
                 break;
@@ -107,6 +114,7 @@ class Window extends JFrame implements KeyListener{
             }
         };
         gamePanel  = new GamePanel();
+        doubleGamePanel = new DoubleGamePanel();
         // title
         JButton startButton = new JButton("はじめる");
         startButton.addActionListener(new ActionListener() {
@@ -125,21 +133,27 @@ class Window extends JFrame implements KeyListener{
                 change(WINDOW_MODE.PLAY);
             }
         });
-//        twoPlayers.addActionListener(new ActeionListener(){
-//            //
-//        });
+        twoPlayers.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                change(WINDOW_MODE.DOUBLE_PLAY);
+            }
+        });
         modeSelect.add(onePlayer);
         modeSelect.add(twoPlayers);
         // all
         title.     setSize(WIDTH, HEIGHT);
         modeSelect.setSize(WIDTH, HEIGHT);
         gamePanel. setSize(WIDTH, HEIGHT);
+        doubleGamePanel.setSize(DoubleGamePanel.WIDTH, HEIGHT);
         title.     setVisible(false);
         modeSelect.setVisible(false);
         gamePanel .setVisible(false);
+        doubleGamePanel.setVisible(false);
         add(title);
         add(modeSelect);
         add(gamePanel);
+        add(doubleGamePanel);
     }
 
     /*
