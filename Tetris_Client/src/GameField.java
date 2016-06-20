@@ -15,6 +15,8 @@ public class GameField extends KeyPanel implements Runnable {
     private boolean[] minoflag = new boolean[7];// ミノが偏らないようにするための処理に使う
     private Random rand;
     private String[] attackAlternative = {"NOEFFECT", "SINGLE", "DOUBLE", "TRIPLE", "TETRIS"};
+    private int level;// レベル
+    private int totalline;// 消したラインの総数
     private int score;// スコアを保持
     private int deletedline;// 消えた列数
     private int nextLines;// 次に送られてくる列数
@@ -81,6 +83,9 @@ public class GameField extends KeyPanel implements Runnable {
                     JOptionPane.showMessageDialog(null, "GameOver!");
                     break;
                 }
+                // 10ライン消すごとにレベルアップ(上限は10)
+                if (totalline / 10 + 1 != level && level < 10)
+                    level++;
                 // 次のブロックをランダムに作成
                 mino = nextMino;
                 nextMino = createMino(this);
@@ -96,7 +101,7 @@ public class GameField extends KeyPanel implements Runnable {
             repaint();
 
             try {
-                Thread.sleep(200);
+                Thread.sleep(550-level*50); // レベルが上がると猶予が小さくなる
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -124,6 +129,9 @@ public class GameField extends KeyPanel implements Runnable {
         // キーボードが反応するための準備
         setFocusable(true);
         addKeyListener(this);
+
+        // レベルを1にする
+        level = 1;
 
         // 落下ミノ選択用乱数
         rand = new Random();
@@ -216,6 +224,7 @@ public class GameField extends KeyPanel implements Runnable {
                 }
             }
         }
+        totalline += deletedline; // 消えた列数を反映
         return deletedline;
     }
 
@@ -284,16 +293,16 @@ public class GameField extends KeyPanel implements Runnable {
     public void getScore(int lines) {
         switch (lines) {
             case 1:
-                score += 100;
+                score += level * 100;
                 break;
             case 2:
-                score += 300;
+                score += level * 300;
                 break;
             case 3:
-                score += 500;
+                score += level * 500;
                 break;
             case 4:
-                score += 1000;
+                score += level * 1000;
                 break;
         }
         statPanel.changeScore(score);
