@@ -1,27 +1,75 @@
+import javax.swing.*;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class CommunicationClient extends Thread{
-    private String myName;
+    private String myName, playerID;
     private InetAddress addr;
-    private BufferedReader in;
+    public BufferedReader in;
     private PrintWriter out;
     private boolean accepting = true; // Serverからの受付処理を受付中かどうか
     public Socket socket;
     public static final int PORT = 8080;  // Serverのport番号をここにも指定しておく
+    private Queue<String> nextMino, general; // 次のミノと一般命令をそれぞれ格納するキュー
 
     public CommunicationClient(String name, InetAddress addr) throws IOException {
         this.myName = name;
         this.addr = addr;
-        this.socket = new Socket(addr, PORT);
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
-        // Serverからの情報を受け付けるThread
-        CommunicationClient ccAccept = new CommunicationClient(this.myName, this.addr);  // これじゃだめなきがする
-        ccAccept.start();
+        nextMino = new LinkedList<String>();
+        general = new LinkedList<String>();
     }
 
+    /**
+     * サーバーに接続し、サーバーからの出力を読み取るスレッドを走らせる。
+     */
+    public void connect() {
+        try {
+            // 接続
+            this.socket = new Socket(addr, PORT);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+        }
+        catch (IOException e) {
+
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // 接続にあたって適当な文字列を送る
+                out.println("connection");
+                try {
+                    // ID(0か1)を受信
+                    playerID = in.readLine();
+                }
+                catch (IOException e) {
+
+                }
+                // 入力待機と動作実行
+                while (true) {
+                    try {
+                        String str = in.readLine();
+                        if (str == null) {
+                            JOptionPane.showMessageDialog(null, "サーバーが切断されました。");
+                            break;
+                        }
+                        else if (str.equals("exit"))// 終了処理1:exitが入力されるかサーバーが切断される
+                            break;
+                        else if(str.substring(0, 4).equals("next")) { // next:1~7が帰ったらHashMapに入れる
+                            nextMino.add(str.substring(5));
+                        }
+                        else
+                            general.add(str);
+                    }
+                    catch (Exception e) {
+
+                    }
+                }
+            }
+        }).start();
+    }
     /**
      * ユーザの情報をServerに送信する
      */
@@ -75,18 +123,36 @@ public class CommunicationClient extends Thread{
         accepting = false;
     }
 
-    @Override
-    public void run(){
-        // ここにこのrun()が走っているThreadのユーザに罰ゲーム処理と，相手のボード状況の変化をさせる
-        while(accepting){
-            try{
-                //　Serverから送られてきた文字列に応じて，このスレッドを走らせている
-                //  Clientに処理をする。（Serverの構築がきてから）
-                String str = in.readLine();
-            }catch(IOException e){
-                // ----
+    /**
+     * サーバーから次のテトロミノを取得する
+     * @return int 0~6
+     */
+    public int getMinoCode() {
+        // next:0またはnext:1と送信
+        sendToServer("next:"+playerID);
+        while(true) {
+            if(!nextMino.isEmpty()) break;
+            try {
+                Thread.sleep(200);
+            }
+            catch (InterruptedException e) {
+
             }
         }
+        // 整数変換して返す
+        return Integer.parseInt(nextMino.poll());
+    }
 
+    public String getGeneral() {
+        while(true){
+            if(!general.isEmpty()) break;
+            try {
+                Thread.sleep(200);
+            }
+            catch (InterruptedException e) {
+
+            }
+        }
+        return general.poll();
     }
 }

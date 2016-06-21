@@ -7,7 +7,7 @@ public class GamePanel extends KeyPanel{
 
     public GamePanel() {
         statPanel = new StatPanel();
-        gameField = new GameField(statPanel);
+        gameField = new GameField(statPanel, GameField.SINGLE, null);
     }
 
     public void start() {

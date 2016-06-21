@@ -4,6 +4,9 @@ import java.awt.event.KeyEvent;
 import java.util.*;
 
 public class GameField extends KeyPanel implements Runnable {
+    public static final int SINGLE = 1;
+    public static final int DOUBLE_SELF = 2;
+    public static final int DOUBLE_ENEMY = 3;
     private static final int WIDTH = 10;
     private static final int HEIGHT = 22;
     public static final int COL = HEIGHT + 1;
@@ -12,8 +15,6 @@ public class GameField extends KeyPanel implements Runnable {
     private int[][] field = new int[COL][ROW];
     private boolean hold_flag;
     private Tetromino mino, nextMino, hold;
-    private boolean[] minoflag = new boolean[7];// ミノが偏らないようにするための処理に使う
-    private Random rand;
     private String[] attackAlternative = {"NOEFFECT", "SINGLE", "DOUBLE", "TRIPLE", "TETRIS"};
     private int score;// スコアを保持
     private int deletedline;// 消えた列数
@@ -22,9 +23,21 @@ public class GameField extends KeyPanel implements Runnable {
     private int lineholecount;// 同じ場所でせり上がった回数
     private StatPanel statPanel; // 盤面右側のパネル
     private BlockPanel nextPanel, holdPanel; // 次のブロックとホールドのプレビュー
+    private NextMinoManager nextMinoManager;
+    private CommunicationClient client;
 
-    GameField(StatPanel statPanel) {
+    GameField(StatPanel statPanel, int player, CommunicationClient client) {
         super();
+        switch (player) {
+            case SINGLE :
+                nextMinoManager = new NextMinoManager();
+                break;
+            case DOUBLE_SELF :
+                nextMinoManager = new NextMinoManager(client);
+                break;
+            default :
+                break;
+        }
         setLayout(new BorderLayout());
         // 各パネルの紐付け
         this.statPanel = statPanel;
@@ -39,6 +52,9 @@ public class GameField extends KeyPanel implements Runnable {
     }
 
     public void run() {
+        mino = nextMinoManager.create(this);
+        nextPanel.set(mino);
+        nextMino = nextMinoManager.create(this);
         try {
             // カウントダウン
             statPanel.message.setText("3");
@@ -54,8 +70,6 @@ public class GameField extends KeyPanel implements Runnable {
 
         }
         hold_flag = false;
-        mino = createMino(this);
-        nextMino = createMino(this);
         nextPanel.set(nextMino);
         linehole = (int) (Math.random() * 10) + 1;
         while (true) {
@@ -71,7 +85,7 @@ public class GameField extends KeyPanel implements Runnable {
                 }
                 // 次のブロックをランダムに作成
                 mino = nextMino;
-                nextMino = createMino(this);
+                nextMino = nextMinoManager.create(this);
                 nextPanel.set(nextMino);
                 if (lineholecount == 4) {
                     linehole = (int) (Math.random() * 10);
@@ -126,53 +140,6 @@ public class GameField extends KeyPanel implements Runnable {
         // キーボードが反応するための準備
         setFocusable(true);
         addKeyListener(this);
-
-        // 落下ミノ選択用乱数
-        rand = new Random();
-        rand.setSeed(System.currentTimeMillis());
-    }
-
-    /**
-     * 新しいテトロミノをランダムに生成
-     *
-     * @param gameField
-     *            紐付けするフィールド
-     * @return 作成されたテトロミノ
-     */
-    private Tetromino createMino(GameField gameField) {
-        // ミノが偏らないようにするための処理を追加
-        int blockNo = rand.nextInt(7);
-        int seedMinoNo = blockNo;// 乱数で得られたミノ
-        while (true) {
-            if (!minoflag[blockNo]) {
-                minoflag[blockNo] = true;
-                switch (blockNo) {
-                    case 0 :
-                        return new MinoI(gameField);
-                    case 1 :
-                        return new MinoO(gameField);
-                    case 2 :
-                        return new MinoZ(gameField);
-                    case 3 :
-                        return new MinoL(gameField);
-                    case 4 :
-                        return new MinoS(gameField);
-                    case 5 :
-                        return new MinoT(gameField);
-                    case 6 :
-                        return new MinoJ(gameField);
-                }
-            }
-            else {
-                blockNo = (blockNo + 1) % 7;// 1つずらす
-                // 1週したら初期化
-                if (seedMinoNo == blockNo) {
-                    minoflag = new boolean[7];
-                }
-                continue;
-            }
-            return null;
-        }
     }
 
     /**
@@ -260,7 +227,7 @@ public class GameField extends KeyPanel implements Runnable {
                 holdPanel.set(hold);
                 // 次のミノを更新しパネルにセット
                 mino = nextMino;
-                nextMino = createMino(this);
+                nextMino = nextMinoManager.create(this);
                 nextPanel.set(nextMino);
             }
             /*

@@ -1,11 +1,15 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.io.IOException;
+import java.net.InetAddress;
 
 public class DoubleGamePanel extends KeyPanel {
     private GameField myGameField, enemyGameField; // テトリス盤
     private StatPanel myStatPanel, enemyStatPanel; // ステータスパネル
+    private CommunicationClient client;
+    private InetAddress inetAddress;
+    private String hostName;
 
     public static final int WIDTH = 800;
     public static final int HEIGHT = 570;
@@ -13,11 +17,20 @@ public class DoubleGamePanel extends KeyPanel {
     public DoubleGamePanel() {
         setSize(new Dimension(WIDTH, HEIGHT));
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS)); // BoxLayoutで横から詰める
+        try {
+//           inetAddress = InetAddress.getByAddress(new byte[] {10, 37, (byte)129, 2});
+            inetAddress = InetAddress.getByName("LocalHost");
+            hostName = inetAddress.getHostName();
+            client = new CommunicationClient(hostName, inetAddress);
+        }
+        catch (IOException e) {
+
+        }
 
         myStatPanel    = new StatPanel();
         enemyStatPanel = new StatPanel();
-        myGameField    = new GameField(myStatPanel);
-        enemyGameField = new GameField(enemyStatPanel);
+        myGameField    = new GameField(myStatPanel, GameField.DOUBLE_SELF, client);
+        enemyGameField = new GameField(enemyStatPanel, GameField.DOUBLE_ENEMY, null);
 
         // 自分の盤面
         myGameField.setLayout(new BorderLayout());
@@ -53,7 +66,19 @@ public class DoubleGamePanel extends KeyPanel {
     }
 
     public void start() {
-        myGameField.start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                client.connect();
+                while(true) {
+                    if(client.getGeneral().equals("start")) {
+                        break;
+                    }
+                }
+                myGameField.start();
+            }
+        }).start();
+
     }
 
     @Override
