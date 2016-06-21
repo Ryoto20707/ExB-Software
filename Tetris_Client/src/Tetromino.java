@@ -13,7 +13,13 @@ public abstract class Tetromino{
     public static final int LEFT  = 1;
     public static final int RIGHT = 2;
     public static final int DOWN  = 3;
+
+    public static final int WALL = 7;
+    public static final int NONE = 8;
+
     protected int[][] block = new int[ROW][COL];
+
+    public static int CODE;
 
     Point pos;
     GameField field;
@@ -27,10 +33,10 @@ public abstract class Tetromino{
      */
     Tetromino(GameField field) {
         this.field = field;
-        // 全部を0（ブロックなし）で埋める
+        // 全部をNONE（ブロックなし）で埋める
         for (int i = 0; i < ROW; i++) {
             for (int j = 0; j < COL; j++) {
-                block[i][j] = 0;
+                block[i][j] = NONE;
             }
         }
 
@@ -46,7 +52,7 @@ public abstract class Tetromino{
     public void drawInPanel(Graphics g) {
         for (int i = 0; i < ROW; i++) {
             for (int j = 0; j < COL; j++) {
-                if (block[i][j] > 1) {
+                if (block[i][j] != NONE) {
                     // ブロックの描画
                     g.setColor(getColor(block[i][j]));
                     g.fillRect((pos.x + j) *  TILE_SIZE,
@@ -147,22 +153,22 @@ public abstract class Tetromino{
 
     public static Color getColor(int tile) {
         switch (tile) {
-            case 1 :
-                return Color.LIGHT_GRAY;
-            case 2 :
+            case 0 :
                 return MinoI.color;
-            case 3 :
+            case 1 :
                 return MinoJ.color;
-            case 4 :
+            case 2 :
                 return MinoL.color;
-            case 5 :
+            case 3 :
                 return MinoO.color;
-            case 6 :
+            case 4 :
                 return MinoS.color;
-            case 7 :
+            case 5 :
                 return MinoT.color;
-            case 8 :
+            case 6 :
                 return MinoZ.color;
+            case 7 :
+                return Color.LIGHT_GRAY;
             default :
                 return Color.BLACK;
         }

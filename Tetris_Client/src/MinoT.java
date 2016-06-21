@@ -3,13 +3,14 @@ import java.awt.*;
 public class MinoT extends Tetromino {
 
     public static Color color = Color.MAGENTA;
+    public static int CODE = 5;
 
     MinoT(GameField gameField) {
         super(gameField);
 
-        block[1][1] = 7;
-        block[2][1] = 7;
-        block[2][2] = 7;
-        block[3][1] = 7;
+        block[1][1] = CODE;
+        block[2][1] = CODE;
+        block[2][2] = CODE;
+        block[3][1] = CODE;
     }
 }
