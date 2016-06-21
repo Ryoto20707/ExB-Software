@@ -5,8 +5,9 @@ public class MinoI extends Tetromino {
     public static Color color = Color.CYAN;
     public static int CODE = 0;
 
-    MinoI(GameField gameField) {
-        super(gameField);
+    MinoI() {
+        super();
+        code = CODE;
 
         block[0][1] = CODE;
         block[1][1] = CODE;

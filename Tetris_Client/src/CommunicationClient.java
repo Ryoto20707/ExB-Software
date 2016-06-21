@@ -15,6 +15,7 @@ public class CommunicationClient extends Thread{
     public static final int PORT = 8080;  // Serverのport番号をここにも指定しておく
     private Queue<String> nextMino, general; // 次のミノと一般命令をそれぞれ格納するキュー
     public String enemyField = "";
+    public int enemyNext = -1, enemyHold = -1, enemyLevel = 1, enemyScore = 0;
 
     public CommunicationClient(String name, InetAddress addr) throws IOException {
         this.myName = name;
@@ -34,7 +35,7 @@ public class CommunicationClient extends Thread{
             out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
         }
         catch (IOException e) {
-
+            e.printStackTrace();
         }
         new Thread(new Runnable() {
             @Override
@@ -46,7 +47,7 @@ public class CommunicationClient extends Thread{
                     playerID = in.readLine();
                 }
                 catch (IOException e) {
-
+                    e.printStackTrace();
                 }
                 // 入力待機と動作実行
                 while (true) {
@@ -58,17 +59,30 @@ public class CommunicationClient extends Thread{
                         }
                         else if (str.equals("exit"))// 終了処理1:exitが入力されるかサーバーが切断される
                             break;
-                        else if(str.substring(0, 4).equals("next")) { // next:1~7が帰ったらHashMapに入れる
+                        else if(str.length() > 4 && str.substring(0, 4).equals("next")) { // next:1~7が帰ったらHashMapに入れる
                             nextMino.add(str.substring(5));
                         }
-                        else if(str.substring(0, 5).equals("field")) {
-                            enemyField = str.substring(6);
+                        else if(str.length() > 9 && str.substring(0, 9).equals("enemyNext")) {
+                            enemyNext = Integer.parseInt(str.substring(10));
                         }
-                        else
+                        else if(str.length() > 9 && str.substring(0, 9).equals("enemyHold")) {
+                            enemyHold = Integer.parseInt(str.substring(10));
+                        }
+                        else if(str.length() > 10 && str.substring(0, 10).equals("enemyLevel")) {
+                            enemyLevel = Integer.parseInt(str.substring(11));
+                        }
+                        else if(str.length() > 10 && str.substring(0, 10).equals("enemyScore")) {
+                            enemyScore = Integer.parseInt(str.substring(11));
+                        }
+                        else if(str.length() > 10 && str.substring(0, 10).equals("enemyField")) {
+                            enemyField = str.substring(11);
+                        }
+                        else {
                             general.add(str);
+                        }
                     }
                     catch (Exception e) {
-
+                        e.printStackTrace();
                     }
                 }
             }

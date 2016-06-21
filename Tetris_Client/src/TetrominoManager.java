@@ -1,6 +1,6 @@
 import java.util.Random;
 
-public class NextMinoManager {
+public class TetrominoManager {
     public static final int SINGLE = 1;
     public static final int DOUBLE = 2;
 
@@ -12,7 +12,7 @@ public class NextMinoManager {
     /**
      * シングルプレイ用のマネージャコンストラクタ
      */
-    public NextMinoManager() {
+    public TetrominoManager() {
         // 落下ミノ選択用乱数
         rand = new Random();
         rand.setSeed(System.currentTimeMillis());
@@ -23,7 +23,7 @@ public class NextMinoManager {
      * ダブルプレイ用のマネージャコンストラクタ
      * @param client 通信のためのクライアント
      */
-    public NextMinoManager(CommunicationClient client) {
+    public TetrominoManager(CommunicationClient client) {
         this.client = client;
         type = DOUBLE;
     }
@@ -39,11 +39,11 @@ public class NextMinoManager {
         int code;
         if (type == SINGLE) {
             code = createMinoCode();
-            return generateMino(code, gameField);
+            return generate(code, gameField);
         }
         if (type == DOUBLE) {
             code = client.getMinoCode();
-            return generateMino(code, gameField);
+            return generate(code, gameField);
         }
         return null;
     }
@@ -74,26 +74,37 @@ public class NextMinoManager {
     /**
      * コードを元にテトロミノのインスタンスを作成
      * @param blockNo コード
+     * @return Tetromino
+     */
+    public static Tetromino generate(int blockNo) {
+        switch (blockNo) {
+            case 0 :
+                return new MinoI();
+            case 1 :
+                return new MinoJ();
+            case 2 :
+                return new MinoL();
+            case 3 :
+                return new MinoO();
+            case 4 :
+                return new MinoS();
+            case 5 :
+                return new MinoT();
+            case 6 :
+                return new MinoZ();
+        }
+        return null;
+    }
+
+    /**
+     * コードを元にテトロミノのインスタンスを作成
+     * @param blockNo コード
      * @param gameField 紐づけるフィールド
      * @return Tetromino
      */
-    public Tetromino generateMino(int blockNo, GameField gameField) {
-        switch (blockNo) {
-            case 0 :
-                return new MinoI(gameField);
-            case 1 :
-                return new MinoO(gameField);
-            case 2 :
-                return new MinoZ(gameField);
-            case 3 :
-                return new MinoL(gameField);
-            case 4 :
-                return new MinoS(gameField);
-            case 5 :
-                return new MinoT(gameField);
-            case 6 :
-                return new MinoJ(gameField);
-        }
-        return null;
+    public static Tetromino generate(int blockNo, GameField gameField) {
+        Tetromino mino = generate(blockNo);
+        mino.field = gameField;
+        return mino;
     }
 }

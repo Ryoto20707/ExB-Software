@@ -24,7 +24,7 @@ public class GameField extends KeyPanel implements Runnable {
     private int lineholecount;// 同じ場所でせり上がった回数
     private StatPanel statPanel; // 盤面右側のパネル
     private BlockPanel nextPanel, holdPanel; // 次のブロックとホールドのプレビュー
-    private NextMinoManager nextMinoManager;
+    private TetrominoManager manager;
     private CommunicationClient client;
     private int player;
 
@@ -33,10 +33,10 @@ public class GameField extends KeyPanel implements Runnable {
         this.player = player;
         switch (player) {
             case SINGLE :
-                nextMinoManager = new NextMinoManager();
+                manager = new TetrominoManager();
                 break;
             case DOUBLE_SELF :
-                nextMinoManager = new NextMinoManager(client);
+                manager = new TetrominoManager(client);
                 this.client = client;
                 break;
             case DOUBLE_ENEMY :
@@ -71,8 +71,15 @@ public class GameField extends KeyPanel implements Runnable {
                 while(true) {
                     if(!client.enemyField.equals("")) {
                         setField(client.enemyField);
-                        repaint();
                         client.enemyField = "";
+
+                        statPanel.setLevel(client.enemyLevel);
+                        statPanel.changeScore(client.enemyScore);
+                        nextPanel.set(client.enemyNext);
+                    }
+                    if(client.enemyHold != -1) {
+                        holdPanel.set(client.enemyHold);
+                        client.enemyHold = -1;
                     }
                     try {
                         Thread.sleep(1000);
@@ -92,12 +99,13 @@ public class GameField extends KeyPanel implements Runnable {
                 field[i][j] = Integer.parseInt(String.valueOf(str.charAt(strIndex++)));
             }
         }
+        repaint();
     }
 
     public void run() {
-        mino = nextMinoManager.create(this);
+        mino = manager.create(this);
         nextPanel.set(mino);
-        nextMino = nextMinoManager.create(this);
+        nextMino = manager.create(this);
         try {
             // カウントダウン
             statPanel.message.setText("3");
@@ -110,7 +118,7 @@ public class GameField extends KeyPanel implements Runnable {
             statPanel.setMessage("Start", 1000);
         }
         catch (InterruptedException e) {
-
+            e.printStackTrace();
         }
         hold_flag = false;
         nextPanel.set(nextMino);
@@ -140,10 +148,11 @@ public class GameField extends KeyPanel implements Runnable {
                 // 10ライン消すごとにレベルアップ(上限は10)
                 if (totalline / 10 + 1 != level && level < 10) {
                     statPanel.setLevel(++level);
+                    send("level:" + level);
                 }
                 // 次のブロックをランダムに作成
                 mino = nextMino;
-                nextMino = nextMinoManager.create(this);
+                nextMino = manager.create(this);
                 nextPanel.set(nextMino);
                 hold_flag = false;
                 // せり上がりが4回を超えたら場所を変更
@@ -275,7 +284,7 @@ public class GameField extends KeyPanel implements Runnable {
                 holdPanel.set(hold);
                 // 次のミノを更新しパネルにセット
                 mino = nextMino;
-                nextMino = nextMinoManager.create(this);
+                nextMino = manager.create(this);
                 nextPanel.set(nextMino);
             }
             /*
@@ -291,6 +300,7 @@ public class GameField extends KeyPanel implements Runnable {
             }
             // フラグをセット。一度地面につくまで変更できない。
             hold_flag = true;
+            send("hold:" + hold.getCode());
         }
     }
 
@@ -311,6 +321,7 @@ public class GameField extends KeyPanel implements Runnable {
                 break;
         }
         statPanel.changeScore(score);
+        send("score:" + score);
     }
 
     // 相手に送る列数を数える
@@ -380,7 +391,7 @@ public class GameField extends KeyPanel implements Runnable {
 
         for (int y = 0; y < COL; y++) {
             for (int x = 0; x < ROW; x++) {
-                if (field[y][x] > 0) {
+                if (field[y][x] != Tetromino.NONE) {
                     g.setColor(Tetromino.getColor(field[y][x]));
                     g.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     if (field[y][x] != Tetromino.WALL && field[y][x] != Tetromino.NONE) {
@@ -484,5 +495,11 @@ public class GameField extends KeyPanel implements Runnable {
             }
         }
         return false;
+    }
+
+    public void send(String str) {
+        if(player == DOUBLE_SELF) {
+            client.sendToServer(str);
+        }
     }
 }

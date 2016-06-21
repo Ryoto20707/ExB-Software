@@ -19,6 +19,7 @@ public class Main extends Thread{
     private static boolean[] minoflag = new boolean[7];// ミノが偏らないようにするための処理に使う
     private static final HashMap<Integer, Integer> minoMap = new HashMap<Integer, Integer>();
     private static int[] mapCount = {0, 0};
+    private int before = -1;
 
     // スレッド用コンストラクタ
     Main(BufferedReader sender, int id) {
@@ -118,16 +119,32 @@ public class Main extends Thread{
                 fallBlock(enemy(playerID), str.substring(7));
                 break;
             case 'f':  // fieldInfo
-                renewFieldInfo(enemy(playerID), str.substring(6));
+                sendTo(enemy(playerID), "enemyField:" + str.substring(6));
                 break;
             case 'n': // nextMino
-                out[playerID].println("next:"+createMinoCode(playerID));
+                int minoCode = createMinoCode(playerID);
+                sendTo(playerID, "next:" + minoCode);
+                if(before != -1) sendTo(enemy(playerID), "enemyNext:" + before);
+                before = minoCode;
+                break;
+            case 'h':
+                sendTo(enemy(playerID), "enemyHold:" + str.substring(5));
+                break;
+            case 'l':
+                sendTo(enemy(playerID), "enemyLevel:" + str.substring(6));
+                break;
+            case 's':
+                sendTo(enemy(playerID), "enemyScore:" + str.substring(6));
                 break;
             case 'E':  // end of game
                 displayResult();  // 勝敗結果を表示する
                 break;
 
         }
+    }
+
+    private static void sendTo(int target, String str) {
+        out[target].println(str);
     }
 
     private void displayResult() {
@@ -138,17 +155,12 @@ public class Main extends Thread{
         // clientに罰の量を送るだけ，送信用のスレッドに組み込む
     }
 
-    private void renewFieldInfo(int target, String fieldInfo) {
-        // clientに送るだけ，送信用のスレッドに組み込む
-        out[target].println("field:"+fieldInfo);
-    }
-
     /**
      * 開始の合図を送信
      */
     private static void sendStart() {
-        out[0].println("start");
-        out[1].println("start");
+        sendTo(0, "start");
+        sendTo(1, "start");
     }
 
     /**
@@ -192,7 +204,7 @@ public class Main extends Thread{
     /**
      * 自分のIDを元に敵のIDを返す
      * @param playerID 0or1
-     * @return int 0or1
+     * @return int 0or1or-1(error)
      */
     private static int enemy(int playerID) {
         if(playerID == 0) return 1;

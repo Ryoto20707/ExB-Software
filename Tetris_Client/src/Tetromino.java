@@ -19,7 +19,7 @@ public abstract class Tetromino{
 
     protected int[][] block = new int[ROW][COL];
 
-    public static int CODE;
+    public int code;
 
     Point pos;
     GameField field;
@@ -29,19 +29,17 @@ public abstract class Tetromino{
     /**
      * テトロミノの初期化
      * ただしこれは抽象クラスなので各形のミノがオーバーライドする
-     * @param field 紐付けするフィールド（移動判定などのため）
      */
-    Tetromino(GameField field) {
-        this.field = field;
+    protected Tetromino() {
         // 全部をNONE（ブロックなし）で埋める
         for (int i = 0; i < ROW; i++) {
             for (int j = 0; j < COL; j++) {
                 block[i][j] = NONE;
             }
         }
-
         // 中央上から落下を開始する
         pos = new Point(4, -4);
+        code = 0;
     }
 
 
@@ -172,5 +170,9 @@ public abstract class Tetromino{
             default :
                 return Color.BLACK;
         }
+    }
+
+    public int getCode() {
+        return code;
     }
 }

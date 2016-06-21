@@ -3,10 +3,11 @@ import java.awt.*;
 public class MinoO extends Tetromino {
 
     public static Color color = Color.YELLOW;
-    public static int CODE = 3;
+    public int CODE = 3;
 
-    MinoO(GameField gameField) {
-        super(gameField);
+    MinoO() {
+        super();
+        code = CODE;
 
         block[1][1] = CODE;
         block[1][2] = CODE;

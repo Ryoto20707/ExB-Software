@@ -39,4 +39,9 @@ public class BlockPanel extends JPanel {
         this.mino = nextBlock;
         repaint();
     }
+
+    public void set(int blockID) {
+        this.mino = TetrominoManager.generate(blockID);
+        repaint();
+    }
 }
