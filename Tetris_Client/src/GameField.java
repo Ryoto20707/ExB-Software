@@ -16,6 +16,8 @@ public class GameField extends KeyPanel implements Runnable {
     private boolean hold_flag;
     private Tetromino mino, nextMino, hold;
     private String[] attackAlternative = {"NOEFFECT", "SINGLE", "DOUBLE", "TRIPLE", "TETRIS"};
+    private int level;// レベル
+    private int totalline;// 消したラインの総数
     private int score;// スコアを保持
     private int deletedline;// 消えた列数
     private int nextLines;// 次に送られてくる列数
@@ -71,7 +73,6 @@ public class GameField extends KeyPanel implements Runnable {
         }
         hold_flag = false;
         nextPanel.set(nextMino);
-        linehole = (int) (Math.random() * 10) + 1;
         while (true) {
             // ブロックを下方向へ移動する
             boolean isFixed = mino.move(Tetromino.DOWN);
@@ -79,17 +80,30 @@ public class GameField extends KeyPanel implements Runnable {
                 // 盤面変化の情報を送る
                 String filedString = getFieldString();
 //                sendFieldInfoToServer(fieldString);    // CommunicationClientのインスタンスに対して適用
+                // ブロックがそろった行を消す
+                int attackNum = deleteLine();
+
+            // 消した行数に応じて，罰ゲームに関する情報を送る
+//            while(sendAttackInfoToServer(attackAlternative[attackNum]) == -1); // CommunicationClientのインスタンスに対して適用
+                // スコアを加算する
+                getScore(deletedline);
+                // 相殺込みで何列送るか計算して送る
+                sendLine(sendLineCount(deletedline));
+                // ブロックせり上がり処理
+                riseLine(nextLines);
+
                 if (isStacked()) {
+                    repaint(); // ゲームオーバー後にも更新
                     JOptionPane.showMessageDialog(null, "GameOver!");
                     break;
                 }
+                // 10ライン消すごとにレベルアップ(上限は10)
+                if (totalline / 10 + 1 != level && level < 10)
+                    level++;
                 // 次のブロックをランダムに作成
                 mino = nextMino;
                 nextMino = nextMinoManager.create(this);
                 nextPanel.set(nextMino);
-                if (lineholecount == 4) {
-                    linehole = (int) (Math.random() * 10);
-                }
                 hold_flag = false;
                 // せり上がりが4回を超えたら場所を変更
                 if (lineholecount == 4) {
@@ -97,22 +111,11 @@ public class GameField extends KeyPanel implements Runnable {
                     linehole = (int) (Math.random() * 10) + 1; // 1から10の乱数
                 }
             }
-            // ブロックがそろった行を消す
-            int attackNum = deleteLine();
 
-            // 消した行数に応じて，罰ゲームに関する情報を送る
-//            while(sendAttackInfoToServer(attackAlternative[attackNum]) == -1); // CommunicationClientのインスタンスに対して適用
-
-            // スコアを加算する
-            getScore(deletedline);
-            // 相殺込みで何列送るか計算して送る
-            sendLine(sendLineCount(deletedline));
-            // ブロックせり上がり処理
-            riseLine(nextLines);
             repaint();
 
             try {
-                Thread.sleep(200);
+                Thread.sleep(300-level*25); // レベルが上がると猶予が小さくなる
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -140,6 +143,9 @@ public class GameField extends KeyPanel implements Runnable {
         // キーボードが反応するための準備
         setFocusable(true);
         addKeyListener(this);
+
+        // レベルを1にする
+        level = 1;
     }
 
     /**
@@ -182,6 +188,7 @@ public class GameField extends KeyPanel implements Runnable {
                 }
             }
         }
+        totalline += deletedline; // 消えた列数を反映
         return deletedline;
     }
 
@@ -250,16 +257,16 @@ public class GameField extends KeyPanel implements Runnable {
     public void getScore(int lines) {
         switch (lines) {
             case 1:
-                score += 100;
+                score += level * 100;
                 break;
             case 2:
-                score += 300;
+                score += level * 300;
                 break;
             case 3:
-                score += 500;
+                score += level * 500;
                 break;
             case 4:
-                score += 1000;
+                score += level * 1000;
                 break;
         }
         statPanel.changeScore(score);
