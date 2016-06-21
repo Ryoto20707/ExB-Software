@@ -7,6 +7,7 @@ public class StatPanel extends JPanel {
     JLabel scoreTitle; // "Score"ラベル
     JLabel scoreDisp;  // 実際のスコアを記入
     JLabel message;    // メッセージ
+    JLabel level;      // "Level "+level;
     BlockPanel nextPanel; // 次のミノのプレビュー
     BlockPanel holdPanel; // ホールドのプレビュー
 
@@ -51,6 +52,11 @@ public class StatPanel extends JPanel {
         message.setBackground(Color.LIGHT_GRAY);
         message.setOpaque(true);
         add(message);
+        // レベル
+        level = new JLabel("Level 1");
+        level.setVisible(true);
+        level.setBounds(30, 400, 80, 12);
+        add(level);
     }
 
     /**
@@ -60,6 +66,11 @@ public class StatPanel extends JPanel {
     public void changeScore(int newScore) {
         scoreDisp.setText(Integer.toString(newScore));
         scoreDisp.repaint();
+    }
+
+    public void setLevel(int newLevel) {
+        level.setText("Level "+newLevel);
+        level.repaint();
     }
 
     @Override

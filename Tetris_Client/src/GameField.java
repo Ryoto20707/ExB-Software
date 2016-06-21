@@ -98,8 +98,9 @@ public class GameField extends KeyPanel implements Runnable {
                     break;
                 }
                 // 10ライン消すごとにレベルアップ(上限は10)
-                if (totalline / 10 + 1 != level && level < 10)
-                    level++;
+                if (totalline / 10 + 1 != level && level < 10) {
+                    statPanel.setLevel(++level);
+                }
                 // 次のブロックをランダムに作成
                 mino = nextMino;
                 nextMino = nextMinoManager.create(this);
