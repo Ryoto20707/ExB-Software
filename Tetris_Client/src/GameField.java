@@ -1,7 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.util.*;
 
 public class GameField extends KeyPanel implements Runnable {
     public static final int SINGLE = 1;
@@ -27,15 +26,21 @@ public class GameField extends KeyPanel implements Runnable {
     private BlockPanel nextPanel, holdPanel; // 次のブロックとホールドのプレビュー
     private NextMinoManager nextMinoManager;
     private CommunicationClient client;
+    private int player;
 
     GameField(StatPanel statPanel, int player, CommunicationClient client) {
         super();
+        this.player = player;
         switch (player) {
             case SINGLE :
                 nextMinoManager = new NextMinoManager();
                 break;
             case DOUBLE_SELF :
                 nextMinoManager = new NextMinoManager(client);
+                this.client = client;
+                break;
+            case DOUBLE_ENEMY :
+                this.client = client;
                 break;
             default :
                 break;
@@ -49,8 +54,44 @@ public class GameField extends KeyPanel implements Runnable {
         init();
     }
 
+    /**
+     * 自分のプレイ画面の開始
+     */
     public void start() {
         new Thread(this).start();
+    }
+
+    /**
+     * マルチプレイの相手画面トレースの開始
+     */
+    public void startEnemy() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true) {
+                    if(!client.enemyField.equals("")) {
+                        setField(client.enemyField);
+                        repaint();
+                        client.enemyField = "";
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    }
+                    catch (Exception e) {
+
+                    }
+                }
+            }
+        }).start();
+    }
+
+    private void setField(String str) {
+        int strIndex = 0;
+        for(int i = 0; i < COL; i++) {
+            for(int j = 0; j < ROW; j++) {
+                field[i][j] = Integer.parseInt(String.valueOf(str.charAt(strIndex++)));
+            }
+        }
     }
 
     public void run() {
@@ -78,8 +119,7 @@ public class GameField extends KeyPanel implements Runnable {
             boolean isFixed = mino.move(Tetromino.DOWN);
             if (isFixed) {  // ブロックが固定されたら
                 // 盤面変化の情報を送る
-                String filedString = getFieldString();
-//                sendFieldInfoToServer(fieldString);    // CommunicationClientのインスタンスに対して適用
+                if(player == DOUBLE_SELF) client.sendFieldInfoToServer(getFieldString()); // CommunicationClientのインスタンスに対して適用
                 // ブロックがそろった行を消す
                 int attackNum = deleteLine();
 
@@ -88,7 +128,7 @@ public class GameField extends KeyPanel implements Runnable {
                 // スコアを加算する
                 getScore(deletedline);
                 // 相殺込みで何列送るか計算して送る
-                sendLine(sendLineCount(deletedline));
+                if(player == DOUBLE_SELF) sendLine(sendLineCount(deletedline));
                 // ブロックせり上がり処理
                 riseLine(nextLines);
 

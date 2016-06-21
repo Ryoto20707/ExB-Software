@@ -30,7 +30,7 @@ public class DoubleGamePanel extends KeyPanel {
         myStatPanel    = new StatPanel();
         enemyStatPanel = new StatPanel();
         myGameField    = new GameField(myStatPanel, GameField.DOUBLE_SELF, client);
-        enemyGameField = new GameField(enemyStatPanel, GameField.DOUBLE_ENEMY, null);
+        enemyGameField = new GameField(enemyStatPanel, GameField.DOUBLE_ENEMY, client);
 
         // 自分の盤面
         myGameField.setLayout(new BorderLayout());
@@ -76,6 +76,7 @@ public class DoubleGamePanel extends KeyPanel {
                     }
                 }
                 myGameField.start();
+                enemyGameField.startEnemy();
             }
         }).start();
 

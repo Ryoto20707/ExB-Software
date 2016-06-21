@@ -112,18 +112,16 @@ public class Main extends Thread{
      * ・nextMino   "next:<player>"
      * ・the End of Game (未開発)
      */
-    private void doAction(String str, int playerName){
+    private void doAction(String str, int playerID){
         switch (str.charAt(0)){
-            case 'a':  // fieldInfo
-                if(str.charAt(6) == '1')  fallBlock(2, str.substring(8));
-                else if (str.charAt(6) == '2') fallBlock(1, str.substring(8));
+            case 'a':  // attackInfo
+                fallBlock(enemy(playerID), str.substring(7));
                 break;
-            case 'f':  // attackInfo
-                if(str.charAt(7) == '1')  renewFieldInfo(2, str.substring(9));
-                else if (str.charAt(7) == '2') renewFieldInfo(1, str.substring(9));
+            case 'f':  // fieldInfo
+                renewFieldInfo(enemy(playerID), str.substring(6));
                 break;
             case 'n': // nextMino
-                out[playerName].println("next:"+createMinoCode(playerName));
+                out[playerID].println("next:"+createMinoCode(playerID));
                 break;
             case 'E':  // end of game
                 displayResult();  // 勝敗結果を表示する
@@ -140,8 +138,9 @@ public class Main extends Thread{
         // clientに罰の量を送るだけ，送信用のスレッドに組み込む
     }
 
-    private void renewFieldInfo(int target, String filedInfo) {
+    private void renewFieldInfo(int target, String fieldInfo) {
         // clientに送るだけ，送信用のスレッドに組み込む
+        out[target].println("field:"+fieldInfo);
     }
 
     /**
@@ -154,10 +153,10 @@ public class Main extends Thread{
 
     /**
      * テトロミノのコード(0~6)を生成、プレイヤー間で違うものが出ないようにサーバーで統一する
-     * @param player 0または1
+     * @param playerID 0または1
      * @return int 0~6
      */
-    public synchronized int createMinoCode(int player) {
+    public synchronized int createMinoCode(int playerID) {
         /*
          * HashMap<Integer, Integer>に<key, code>の対応で入れる。
          * 先に新しいコードを要求したプレイヤーには新しいコードを生成し、HashMapに入れると同時に返す。
@@ -167,9 +166,9 @@ public class Main extends Thread{
          * ここでいうkeyはmapCount[]でインデックスが保持されている。
          */
         // 後から要求したプレイヤー
-        if(mapCount[player] == Math.min(mapCount[0], mapCount[1]) && mapCount[0] != mapCount[1]) {
-            int code = minoMap.get(mapCount[player]);
-            minoMap.remove(mapCount[player]++);
+        if(mapCount[playerID] == Math.min(mapCount[0], mapCount[1]) && mapCount[0] != mapCount[1]) {
+            int code = minoMap.get(mapCount[playerID]);
+            minoMap.remove(mapCount[playerID]++);
             return code;
         }
         // 先に要求したプレイヤー
@@ -177,7 +176,7 @@ public class Main extends Thread{
         int seedMinoNo = blockNo;// 乱数で得られたミノ
         while (true) {
             if (!minoflag[blockNo]) {
-                minoMap.put(mapCount[player]++, blockNo);
+                minoMap.put(mapCount[playerID]++, blockNo);
                 minoflag[blockNo] = true;
                 return blockNo;
             } else {
@@ -188,5 +187,16 @@ public class Main extends Thread{
                 }
             }
         }
+    }
+
+    /**
+     * 自分のIDを元に敵のIDを返す
+     * @param playerID 0or1
+     * @return int 0or1
+     */
+    private static int enemy(int playerID) {
+        if(playerID == 0) return 1;
+        if(playerID == 1) return 0;
+        return -1;
     }
 }

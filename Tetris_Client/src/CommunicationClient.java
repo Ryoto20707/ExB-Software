@@ -14,6 +14,7 @@ public class CommunicationClient extends Thread{
     public Socket socket;
     public static final int PORT = 8080;  // Serverのport番号をここにも指定しておく
     private Queue<String> nextMino, general; // 次のミノと一般命令をそれぞれ格納するキュー
+    public String enemyField = "";
 
     public CommunicationClient(String name, InetAddress addr) throws IOException {
         this.myName = name;
@@ -60,6 +61,9 @@ public class CommunicationClient extends Thread{
                         else if(str.substring(0, 4).equals("next")) { // next:1~7が帰ったらHashMapに入れる
                             nextMino.add(str.substring(5));
                         }
+                        else if(str.substring(0, 5).equals("field")) {
+                            enemyField = str.substring(6);
+                        }
                         else
                             general.add(str);
                     }
@@ -81,16 +85,16 @@ public class CommunicationClient extends Thread{
      * 盤面の情報をServerに送信する
      */
     public void sendFieldInfoToServer(String FieldInfo){
-//        String "field:<player>:<fieldInfo>"　としてserverに送信
-        String sendStr = "field:" + addr + ":" + FieldInfo;
+//        String "field:<fieldInfo>"　としてserverに送信
+        String sendStr = "field:" + FieldInfo;
         sendToServer(sendStr);
     }
     /**
      * Attackの情報をServerに送信する
      */
     public int sendAttackInfoToServer(String AttackInfo){
-//        String "attack:<player>:<attackinfo>"として送信
-        String sendStr = "attack:" + addr + ":" + AttackInfo;
+//        String "attack:<attackinfo>"として送信
+        String sendStr = "attack:" + AttackInfo;
         int ret = sendToServer(sendStr);
         return (ret == 0) ? 0 : -1;
     }
