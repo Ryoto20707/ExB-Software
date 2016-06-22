@@ -1,6 +1,4 @@
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
@@ -12,7 +10,7 @@ public class Main extends JFrame implements KeyListener {
     public static final int TILE_SIZE = 24;
 
     // 画面の種類
-    private enum WINDOW_MODE {
+    protected enum WINDOW_MODE {
         TITLE, MODE_SELECT, PLAY, DOUBLE_PLAY, RESULT
     }
 
@@ -44,7 +42,7 @@ public class Main extends JFrame implements KeyListener {
      * ウィンドウを切り替える
      * @param mode WINDOW_MODEで与えた定数のいずれかが入る
      */
-    private void change(WINDOW_MODE mode) {
+    protected void change(WINDOW_MODE mode) {
         current.setVisible(false);
         switch (mode) {
             case TITLE :
@@ -74,74 +72,17 @@ public class Main extends JFrame implements KeyListener {
      * 各パネルを初期化する
      */
     private void initPanel() {
-        title      = new KeyPanel() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-
-            }
-        };
-        modeSelect = new KeyPanel() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-
-            }
-        };
-        gamePanel  = new GamePanel();
+        title           = new TitlePanel(this);
+        modeSelect      = new ModeSelectPanel(this);
+        gamePanel       = new GamePanel();
         doubleGamePanel = new DoubleGamePanel();
-        // title
-        JButton startButton = new JButton("はじめる");
-        startButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                change(WINDOW_MODE.MODE_SELECT);
-            }
-        });
-        title.add(startButton);
-        // modeSelect
-        JButton onePlayer  = new JButton("ひとりであそぶ");
-        JButton twoPlayers = new JButton("ふたりであそぶ");
-        onePlayer.addActionListener(new ActionListener(){
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                change(WINDOW_MODE.PLAY);
-            }
-        });
-        twoPlayers.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                change(WINDOW_MODE.DOUBLE_PLAY);
-            }
-        });
-        modeSelect.add(onePlayer);
-        modeSelect.add(twoPlayers);
-        // all
         title.          setSize(WIDTH, HEIGHT);
         modeSelect.     setSize(WIDTH, HEIGHT);
         gamePanel.      setSize(WIDTH, HEIGHT);
         doubleGamePanel.setSize(DoubleGamePanel.WIDTH, HEIGHT);
-        title.     setVisible(false);
-        modeSelect.setVisible(false);
-        gamePanel .setVisible(false);
+        title.          setVisible(false);
+        modeSelect.     setVisible(false);
+        gamePanel.      setVisible(false);
         doubleGamePanel.setVisible(false);
         add(title);
         add(modeSelect);
