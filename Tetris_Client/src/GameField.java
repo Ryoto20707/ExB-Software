@@ -106,6 +106,7 @@ public class GameField extends KeyPanel implements Runnable {
         mino = manager.create(this);
         nextPanel.set(mino);
         nextMino = manager.create(this);
+        linehole = (int) (Math.random() * 10) + 1; // 穴の位置初期化
         try {
             // カウントダウン
             statPanel.message.setText("3");
@@ -369,9 +370,9 @@ public class GameField extends KeyPanel implements Runnable {
         for (int ty = COL - rise - 1; ty < COL - 1; ty++) {
             for (int tx = 1; tx < ROW - 1; tx++) {
                 if (tx != linehole)
-                    field[ty][tx] = 1;
+                    field[ty][tx] = Tetromino.WALL;
                 else
-                    field[ty][tx] = 0;
+                    field[ty][tx] = Tetromino.NONE;
             }
         }
         // 同じ場所でせり上がった回数を数える
