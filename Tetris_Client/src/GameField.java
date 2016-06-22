@@ -145,6 +145,7 @@ public class GameField extends KeyPanel implements Runnable {
                 if (isStacked()) {
                     repaint(); // ゲームオーバー後にも更新
                     JOptionPane.showMessageDialog(null, "GameOver!");
+                    send("gameOver");
                     break;
                 }
                 // 10ライン消すごとにレベルアップ(上限は10)

@@ -20,6 +20,7 @@ public class Main extends Thread{
     private static final HashMap<Integer, Integer> minoMap = new HashMap<Integer, Integer>();
     private static int[] mapCount = {0, 0};
     private int before = -1;
+    private static int winnner;
 
     // スレッド用コンストラクタ
     Main(BufferedReader sender, int id) {
@@ -108,8 +109,8 @@ public class Main extends Thread{
     /**
      * Clientから送られてきた文字列に応じて処理を決定する
      * 上のmain()メソッド中で受け付けた時以外に，送られてくると考えられる情報
-     * ・fieldInfo  "field:<player>:<fieldInfo>"
-     * ・attackInfo "attack:<player>:<attackinfo>"
+     * ・fieldInfo  "field:<fieldInfo>"
+     * ・attackInfo "attack:<attackinfo>"
      * ・nextMino   "next:<player>"
      * ・the End of Game (未開発)
      */
@@ -136,11 +137,24 @@ public class Main extends Thread{
             case 's':
                 sendTo(enemy(playerID), "enemyScore:" + str.substring(6));
                 break;
+            case 'g':
+                synchronized(this) {
+                    if(winnner != playerID) {
+                        setWinnner(enemy(playerID));
+                    }
+                }
+                break;
             case 'E':  // end of game
                 displayResult();  // 勝敗結果を表示する
                 break;
 
         }
+    }
+
+    private static void setWinnner(int player) {
+        sendTo(player, "win");
+        sendTo(enemy(player), "lose");
+        winnner = player;
     }
 
     private static void sendTo(int target, String str) {

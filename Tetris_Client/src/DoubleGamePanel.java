@@ -93,6 +93,17 @@ public class DoubleGamePanel extends KeyPanel {
                         myStatPanel.setMessage("Atk " + client.attack + "lines!", 1000);
                         client.attack = 0;
                     }
+                    if(!client.connecting) {
+                        main.change(Main.WINDOW_MODE.MODE_SELECT);
+                    }
+                    if(client.result == CommunicationClient.WIN) {
+                        myStatPanel.message.setText("WIN");
+                        enemyStatPanel.message.setText("LOSE");
+                    }
+                    if(client.result == CommunicationClient.LOSE) {
+                        myStatPanel.message.setText("LOSE");
+                        enemyStatPanel.message.setText("WIN");
+                    }
                     try {
                         Thread.sleep(1000);
                     }

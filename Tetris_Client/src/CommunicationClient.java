@@ -16,6 +16,10 @@ public class CommunicationClient extends Thread{
     private Queue<String> nextMino, general; // 次のミノと一般命令をそれぞれ格納するキュー
     public String enemyField = "";
     public int enemyNext = -1, enemyHold = -1, enemyLevel = 1, enemyScore = 0, attack = 0;
+    public static final int NOT_SETTLED = 0;
+    public static final int WIN = 1;
+    public static final int LOSE = 2;
+    public int result = NOT_SETTLED;
 
     public CommunicationClient() {
         nextMino = new LinkedList<String>();
@@ -58,6 +62,12 @@ public class CommunicationClient extends Thread{
                         }
                         else if (str.equals("exit"))// 終了処理1:exitが入力されるかサーバーが切断される
                             break;
+                        else if(str.length() == 3 && str.equals("win")) {
+                            result = WIN;
+                        }
+                        else if(str.length() == 4 && str.equals("lose")) {
+                            result = LOSE;
+                        }
                         else if(str.length() > 4 && str.substring(0, 4).equals("next")) { // next:1~7が帰ったらHashMapに入れる
                             nextMino.add(str.substring(5));
                         }
