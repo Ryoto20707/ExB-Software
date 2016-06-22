@@ -14,8 +14,9 @@ public abstract class Tetromino{
     public static final int RIGHT = 2;
     public static final int DOWN  = 3;
 
-    public static final int WALL = 7;
-    public static final int NONE = 8;
+    public static final int OBSTACLE = 7; // お邪魔ブロック
+    public static final int WALL = 8;     // 壁
+    public static final int NONE = 9;     // 空白
 
     protected int[][] block = new int[ROW][COL];
 
@@ -165,7 +166,9 @@ public abstract class Tetromino{
                 return MinoT.color;
             case 6 :
                 return MinoZ.color;
-            case 7 :
+            case OBSTACLE :
+                return Color.GRAY;
+            case WALL :
                 return Color.LIGHT_GRAY;
             default :
                 return Color.BLACK;

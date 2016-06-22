@@ -79,7 +79,24 @@ public class DoubleGamePanel extends KeyPanel {
                 enemyGameField.startEnemy();
             }
         }).start();
-
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true) {
+                    if (client.attack != 0) {
+                        myGameField.nextLines += client.attack;
+                        myStatPanel.setMessage("Atk " + client.attack + "lines!", 1000);
+                        client.attack = 0;
+                    }
+                    try {
+                        Thread.sleep(1000);
+                    }
+                    catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
     }
 
     @Override

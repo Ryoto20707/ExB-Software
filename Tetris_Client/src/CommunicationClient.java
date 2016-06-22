@@ -15,7 +15,7 @@ public class CommunicationClient extends Thread{
     public static final int PORT = 8080;  // Serverのport番号をここにも指定しておく
     private Queue<String> nextMino, general; // 次のミノと一般命令をそれぞれ格納するキュー
     public String enemyField = "";
-    public int enemyNext = -1, enemyHold = -1, enemyLevel = 1, enemyScore = 0;
+    public int enemyNext = -1, enemyHold = -1, enemyLevel = 1, enemyScore = 0, attack = 0;
 
     public CommunicationClient(String name, InetAddress addr) throws IOException {
         this.myName = name;
@@ -62,6 +62,9 @@ public class CommunicationClient extends Thread{
                         else if(str.length() > 4 && str.substring(0, 4).equals("next")) { // next:1~7が帰ったらHashMapに入れる
                             nextMino.add(str.substring(5));
                         }
+                        else if(str.length() > 6 && str.substring(0, 6).equals("attack")) {
+                            attack = Integer.parseInt(str.substring(7));
+                        }
                         else if(str.length() > 9 && str.substring(0, 9).equals("enemyNext")) {
                             enemyNext = Integer.parseInt(str.substring(10));
                         }
@@ -102,15 +105,6 @@ public class CommunicationClient extends Thread{
 //        String "field:<fieldInfo>"　としてserverに送信
         String sendStr = "field:" + FieldInfo;
         sendToServer(sendStr);
-    }
-    /**
-     * Attackの情報をServerに送信する
-     */
-    public int sendAttackInfoToServer(String AttackInfo){
-//        String "attack:<attackinfo>"として送信
-        String sendStr = "attack:" + AttackInfo;
-        int ret = sendToServer(sendStr);
-        return (ret == 0) ? 0 : -1;
     }
 
     /**

@@ -14,12 +14,11 @@ public class GameField extends KeyPanel implements Runnable {
     private int[][] field = new int[COL][ROW];
     private boolean hold_flag;
     private Tetromino mino, nextMino, hold;
-    private String[] attackAlternative = {"NOEFFECT", "SINGLE", "DOUBLE", "TRIPLE", "TETRIS"};
     private int level;// レベル
     private int totalline;// 消したラインの総数
     private int score;// スコアを保持
     private int deletedline;// 消えた列数
-    private int nextLines;// 次に送られてくる列数
+    public int nextLines;// 次に送られてくる列数
     private int linehole;// せり上がるブロックの穴の位置
     private int lineholecount;// 同じ場所でせり上がった回数
     private StatPanel statPanel; // 盤面右側のパネル
@@ -92,6 +91,10 @@ public class GameField extends KeyPanel implements Runnable {
         }).start();
     }
 
+    /**
+     * 相手の盤面を表示する
+     * @param str fieldを文字列化したもの
+     */
     private void setField(String str) {
         int strIndex = 0;
         for(int i = 0; i < COL; i++) {
@@ -122,6 +125,7 @@ public class GameField extends KeyPanel implements Runnable {
         }
         hold_flag = false;
         nextPanel.set(nextMino);
+        resetLinehole();
         while (true) {
             // ブロックを下方向へ移動する
             boolean isFixed = mino.move(Tetromino.DOWN);
@@ -129,16 +133,14 @@ public class GameField extends KeyPanel implements Runnable {
                 // 盤面変化の情報を送る
                 if(player == DOUBLE_SELF) client.sendFieldInfoToServer(getFieldString()); // CommunicationClientのインスタンスに対して適用
                 // ブロックがそろった行を消す
-                int attackNum = deleteLine();
+                deleteLine();
 
-            // 消した行数に応じて，罰ゲームに関する情報を送る
-//            while(sendAttackInfoToServer(attackAlternative[attackNum]) == -1); // CommunicationClientのインスタンスに対して適用
                 // スコアを加算する
                 getScore(deletedline);
                 // 相殺込みで何列送るか計算して送る
-                if(player == DOUBLE_SELF) sendLine(sendLineCount(deletedline));
+                sendLine(attackLines(deletedline));
                 // ブロックせり上がり処理
-                riseLine(nextLines);
+                riseLine();
 
                 if (isStacked()) {
                     repaint(); // ゲームオーバー後にも更新
@@ -157,8 +159,7 @@ public class GameField extends KeyPanel implements Runnable {
                 hold_flag = false;
                 // せり上がりが4回を超えたら場所を変更
                 if (lineholecount == 4) {
-                    lineholecount = 0;
-                    linehole = (int) (Math.random() * 10) + 1; // 1から10の乱数
+                    resetLinehole();
                 }
             }
 
@@ -214,7 +215,7 @@ public class GameField extends KeyPanel implements Runnable {
     /**
      * 行を消去
      */
-    public int deleteLine() {
+    private void deleteLine() {
         // 何列消えたか数える
         deletedline = 0;
         for (int y = 0; y < COL - 1; y++) {
@@ -239,7 +240,6 @@ public class GameField extends KeyPanel implements Runnable {
             }
         }
         totalline += deletedline; // 消えた列数を反映
-        return deletedline;
     }
 
     /**
@@ -266,7 +266,7 @@ public class GameField extends KeyPanel implements Runnable {
     /**
      * ホールドを行う ただし一度行ったらそのミノがつくまで次のホールドはできない
      */
-    public void hold() {
+    private void hold() {
         /**
          * TODO PositionにSetterを作成
          */
@@ -305,7 +305,7 @@ public class GameField extends KeyPanel implements Runnable {
     }
 
     // スコア計算
-    public void getScore(int lines) {
+    private void getScore(int lines) {
         switch (lines) {
             case 1:
                 score += level * 100;
@@ -325,8 +325,8 @@ public class GameField extends KeyPanel implements Runnable {
     }
 
     // 相手に送る列数を数える
-    public int sendLineCount(int lines) {
-        switch (lines) {
+    private int attackLines(int deletedLines) {
+        switch (deletedLines) {
         case 1:
             return 0;
         case 2:
@@ -341,7 +341,7 @@ public class GameField extends KeyPanel implements Runnable {
     }
 
     // 相手に送るブロックの列を計算(相殺あり)
-    public void sendLine(int send) {
+    private void sendLine(int send) {
         if (nextLines < send) {
             pushLine(send - nextLines);
             nextLines = 0;
@@ -351,31 +351,32 @@ public class GameField extends KeyPanel implements Runnable {
     }
 
     // 相手にブロックの列を送る処理
-    public void pushLine(int push) {
-
+    private void pushLine(int push) {
+        send("attack:" + push);
     }
 
     // ブロックがせり上がる処理
-    public void riseLine(int rise) {
-        if (rise == 0)
+    private void riseLine() {
+        if (nextLines == 0)
             return;
         // 上段をせり上げる
-        for (int ty = 0; ty < COL - rise - 1; ty++) {
+        for (int ty = 0; ty < COL - nextLines - 1; ty++) {
             for (int tx = 1; tx < ROW - 1; tx++) {
-                field[ty][tx] = field[ty + rise][tx];
+                field[ty][tx] = field[ty + nextLines][tx];
             }
         }
         // linehole以外を埋める
-        for (int ty = COL - rise - 1; ty < COL - 1; ty++) {
+        for (int ty = COL - nextLines - 1; ty < COL - 1; ty++) {
             for (int tx = 1; tx < ROW - 1; tx++) {
                 if (tx != linehole)
-                    field[ty][tx] = 1;
+                    field[ty][tx] = Tetromino.OBSTACLE;
                 else
-                    field[ty][tx] = 0;
+                    field[ty][tx] = Tetromino.NONE;
             }
         }
         // 同じ場所でせり上がった回数を数える
         lineholecount++;
+        nextLines = 0;
     }
 
     /**
@@ -488,7 +489,7 @@ public class GameField extends KeyPanel implements Runnable {
      *
      * @return boolean 上端まできたらtrue
      */
-    public boolean isStacked() {
+    private boolean isStacked() {
         for (int x = 1; x < WIDTH + 1; x++) {
             if (field[0][x] != Tetromino.NONE) {
                 return true;
@@ -497,7 +498,19 @@ public class GameField extends KeyPanel implements Runnable {
         return false;
     }
 
-    public void send(String str) {
+    /**
+     * せり上げ列の穴をリセット
+     */
+    private void resetLinehole() {
+        lineholecount = 0;
+        linehole = (int) (Math.random() * 10) + 1; // 1から10の乱数
+    }
+
+    /**
+     * マルチプレイの時のみサーバーに送信
+     * @param str 送信文字列
+     */
+    private void send(String str) {
         if(player == DOUBLE_SELF) {
             client.sendToServer(str);
         }

@@ -116,7 +116,7 @@ public class Main extends Thread{
     private void doAction(String str, int playerID){
         switch (str.charAt(0)){
             case 'a':  // attackInfo
-                fallBlock(enemy(playerID), str.substring(7));
+                sendTo(enemy(playerID), "attack:" + str.substring(7));
                 break;
             case 'f':  // fieldInfo
                 sendTo(enemy(playerID), "enemyField:" + str.substring(6));
@@ -151,10 +151,6 @@ public class Main extends Thread{
         // 勝敗結果を表示する
     }
 
-    private void fallBlock(int target, String attackInfo){
-        // clientに罰の量を送るだけ，送信用のスレッドに組み込む
-    }
-
     /**
      * 開始の合図を送信
      */
@@ -168,7 +164,7 @@ public class Main extends Thread{
      * @param playerID 0または1
      * @return int 0~6
      */
-    public synchronized int createMinoCode(int playerID) {
+    private synchronized int createMinoCode(int playerID) {
         /*
          * HashMap<Integer, Integer>に<key, code>の対応で入れる。
          * 先に新しいコードを要求したプレイヤーには新しいコードを生成し、HashMapに入れると同時に返す。
