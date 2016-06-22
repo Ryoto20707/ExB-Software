@@ -109,7 +109,6 @@ public class GameField extends KeyPanel implements Runnable {
         mino = manager.create(this);
         nextPanel.set(mino);
         nextMino = manager.create(this);
-        linehole = (int) (Math.random() * 10) + 1; // 穴の位置初期化
         try {
             // カウントダウン
             statPanel.message.setText("3");
