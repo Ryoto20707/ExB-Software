@@ -14,6 +14,10 @@ public abstract class Tetromino{
     public static final int RIGHT = 2;
     public static final int DOWN  = 3;
 
+    // 回転方向
+    public static final int TURN_L = 0;
+    public static final int TURN_R = 1;
+
     public static final int OBSTACLE = 7; // お邪魔ブロック
     public static final int WALL = 8;     // 壁
     public static final int NONE = 9;     // 空白
@@ -26,6 +30,8 @@ public abstract class Tetromino{
     GameField field;
 
     public static Color color;
+
+    private int fixcount = 5; // 遊び猶予回数
 
     /**
      * テトロミノの初期化
@@ -95,7 +101,9 @@ public abstract class Tetromino{
                 newPos = new Point(pos.x, pos.y + 1);
                 if (field.isMovable(newPos, block)) {
                     pos = newPos;
-                } else {  // 移動できない＝他のブロックとぶつかる＝固定する
+                } else if (fixcount > 0) // 移動できない＝他のブロックとぶつかる
+                    fixcount--; // 遊び回数を減らす
+                else { // 遊び回数が0＝ブロックを固定
                     // ブロックをフィールドに固定する
                     field.fixBlock(pos, block);
                     // 固定されたらtrueを返す
@@ -116,7 +124,7 @@ public abstract class Tetromino{
     /**
      * ブロックを回転させる
      */
-    public void turn() {
+    public void turn(int turndir) {
         /*
          * 壁蹴りを考慮するため、その場・右・左について回転判定を行う。
          * 回転可能と分かった時点で回転を実行する。
@@ -126,9 +134,9 @@ public abstract class Tetromino{
 
         for (int index:moveX) {
             Point newPos = new Point(pos.x+moveX[index], pos.y);
-            if (field.isMovable(newPos, turnBasis(block))) {
+            if (field.isMovable(newPos, turnBasis(block, turndir))) {
                 this.move(moveMino[index]);
-                block = turnBasis(block);
+                block = turnBasis(block, turndir);
                 return;
             }
         }
@@ -139,15 +147,26 @@ public abstract class Tetromino{
      * @param prevBlock 回転前のint[4][4]内形状
      * @return int[][] 回転後の形状
      */
-    private static int[][] turnBasis(int[][] prevBlock){
+    private static int[][] turnBasis(int[][] prevBlock, int turndir) {
         int[][] turnedBlock = new int[ROW][COL];
-
-        for (int i = 0; i < ROW; i++) {
-            for (int j = 0; j < COL; j++) {
-                turnedBlock[j][ROW - 1 - i] = prevBlock[i][j];
+        switch (turndir) {
+        case TURN_L:
+            for (int i = 0; i < ROW; i++) {
+                for (int j = 0; j < COL; j++) {
+                    turnedBlock[ROW - 1 - j][i] = prevBlock[i][j];
+                }
             }
+            return turnedBlock;
+        case TURN_R:
+            for (int i = 0; i < ROW; i++) {
+                for (int j = 0; j < COL; j++) {
+                    turnedBlock[j][ROW - 1 - i] = prevBlock[i][j];
+                }
+            }
+            return turnedBlock;
+        default:
+            return null;
         }
-        return turnedBlock;
     }
 
     public static Color getColor(int tile) {
