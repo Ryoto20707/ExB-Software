@@ -30,6 +30,8 @@ public abstract class Tetromino{
 
     public static Color color;
 
+    private int fixcount = 5; // 遊び猶予回数
+
     /**
      * テトロミノの初期化
      * ただしこれは抽象クラスなので各形のミノがオーバーライドする
@@ -98,7 +100,9 @@ public abstract class Tetromino{
                 newPos = new Point(pos.x, pos.y + 1);
                 if (field.isMovable(newPos, block)) {
                     pos = newPos;
-                } else {  // 移動できない＝他のブロックとぶつかる＝固定する
+                } else if (fixcount > 0) // 移動できない＝他のブロックとぶつかる
+                    fixcount--; // 遊び回数を減らす
+                else { // 遊び回数が0＝ブロックを固定
                     // ブロックをフィールドに固定する
                     field.fixBlock(pos, block);
                     // 固定されたらtrueを返す
