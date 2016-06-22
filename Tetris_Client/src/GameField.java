@@ -106,9 +106,9 @@ public class GameField extends KeyPanel implements Runnable {
     }
 
     public void run() {
-        mino = manager.create(this);
+        mino = manager.next(this);
         nextPanel.set(mino);
-        nextMino = manager.create(this);
+        nextMino = manager.next(this);
         try {
             // カウントダウン
             statPanel.message.setText("3");
@@ -155,7 +155,7 @@ public class GameField extends KeyPanel implements Runnable {
                 }
                 // 次のブロックをランダムに作成
                 mino = nextMino;
-                nextMino = manager.create(this);
+                nextMino = manager.next(this);
                 nextPanel.set(nextMino);
                 hold_flag = false;
             }
@@ -281,7 +281,7 @@ public class GameField extends KeyPanel implements Runnable {
                 holdPanel.set(hold);
                 // 次のミノを更新しパネルにセット
                 mino = nextMino;
-                nextMino = manager.create(this);
+                nextMino = manager.next(this);
                 nextPanel.set(nextMino);
             }
             /*

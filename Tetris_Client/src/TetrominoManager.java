@@ -35,7 +35,7 @@ public class TetrominoManager {
      *            紐付けするフィールド
      * @return 作成されたテトロミノ
      */
-    public Tetromino create(GameField gameField) {
+    public Tetromino next(GameField gameField) {
         int code;
         if (type == SINGLE) {
             code = createMinoCode();
