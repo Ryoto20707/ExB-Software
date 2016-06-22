@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class DoubleGamePanel extends KeyPanel {
     private GameField myGameField, enemyGameField; // テトリス盤
@@ -17,15 +18,7 @@ public class DoubleGamePanel extends KeyPanel {
     public DoubleGamePanel() {
         setSize(new Dimension(WIDTH, HEIGHT));
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS)); // BoxLayoutで横から詰める
-        try {
-//           inetAddress = InetAddress.getByAddress(new byte[] {10, 37, (byte)129, 2});
-            inetAddress = InetAddress.getByName("LocalHost");
-            hostName = inetAddress.getHostName();
-            client = new CommunicationClient(hostName, inetAddress);
-        }
-        catch (IOException e) {
-
-        }
+        client = new CommunicationClient();
 
         myStatPanel    = new StatPanel();
         enemyStatPanel = new StatPanel();
@@ -66,13 +59,26 @@ public class DoubleGamePanel extends KeyPanel {
     }
 
     public void start() {
+        try {
+            inetAddress = InetAddress.getByName(JOptionPane.showInputDialog("サーバーのIPを入力してください。"));
+        }
+        catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        client.connect(inetAddress);
         new Thread(new Runnable() {
             @Override
             public void run() {
-                client.connect();
+                myStatPanel.message.setText("通信待機中");
                 while(true) {
                     if(client.getGeneral().equals("start")) {
                         break;
+                    }
+                    try {
+                        Thread.sleep(100);
+                    }
+                    catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
                 myGameField.start();

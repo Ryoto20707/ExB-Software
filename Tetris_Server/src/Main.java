@@ -33,8 +33,8 @@ public class Main extends Thread{
         in = new BufferedReader[2];
         out = new PrintWriter[2];
         sockets = new Socket[2];
-        System.out.println("Server起動(port=" + PORT + ")");
-        System.out.println("IP : "+ new InetSocketAddress(InetAddress.getLocalHost(), PORT));
+        System.out.println("Server起動");
+        System.out.println("IP : "+ InetAddress.getLocalHost().getHostAddress());
         try {
             acceptPlayer(0);
             try {
@@ -96,13 +96,13 @@ public class Main extends Thread{
 
 
     private static void acceptPlayer(int playerID) throws IOException{
-        System.out.println((playerID+1)+"Pの参加を待っています...: " + s);
+        System.out.println((playerID+1)+"Pの参加を待っています...");
         sockets[playerID] = s.accept();
         in[playerID] = new BufferedReader(new InputStreamReader(sockets[playerID].getInputStream()));
         out[playerID] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(sockets[playerID].getOutputStream())),true);
         out[playerID].println(playerID);// プレイヤー番号を送信
         in[playerID].readLine();
-        System.out.println((playerID+1)+"Pが参加しました: "+sockets[playerID]);
+        System.out.println((playerID+1)+"Pが参加しました");
     }
 
     /**

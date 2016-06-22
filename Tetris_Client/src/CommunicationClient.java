@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 public class CommunicationClient extends Thread{
-    private String myName, playerID;
+    private String playerID;
     private InetAddress addr;
     public BufferedReader in;
     private PrintWriter out;
@@ -17,9 +17,7 @@ public class CommunicationClient extends Thread{
     public String enemyField = "";
     public int enemyNext = -1, enemyHold = -1, enemyLevel = 1, enemyScore = 0, attack = 0;
 
-    public CommunicationClient(String name, InetAddress addr) throws IOException {
-        this.myName = name;
-        this.addr = addr;
+    public CommunicationClient() {
         nextMino = new LinkedList<String>();
         general = new LinkedList<String>();
     }
@@ -27,7 +25,8 @@ public class CommunicationClient extends Thread{
     /**
      * サーバーに接続し、サーバーからの出力を読み取るスレッドを走らせる。
      */
-    public void connect() {
+    public void connect(InetAddress addr) {
+        this.addr = addr;
         try {
             // 接続
             this.socket = new Socket(addr, PORT);
@@ -119,13 +118,6 @@ public class CommunicationClient extends Thread{
      */
     public InetAddress getAddr(){
         return this.addr;
-    }
-
-    /**
-     * nameのgetter
-     */
-    public String getMyName(){
-        return this.myName;
     }
 
     /**
