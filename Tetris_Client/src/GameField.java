@@ -157,10 +157,6 @@ public class GameField extends KeyPanel implements Runnable {
                 nextMino = manager.create(this);
                 nextPanel.set(nextMino);
                 hold_flag = false;
-                // せり上がりが4回を超えたら場所を変更
-                if (lineholecount == 4) {
-                    resetLinehole();
-                }
             }
 
             repaint();
@@ -327,14 +323,8 @@ public class GameField extends KeyPanel implements Runnable {
     // 相手に送る列数を数える
     private int attackLines(int deletedLines) {
         switch (deletedLines) {
-        case 1:
-            return 0;
-        case 2:
-            return 1;
-        case 3:
-            return 2;
         case 4:
-            return 4;
+            return 2;
         default:
             return 0;
         }
@@ -373,9 +363,13 @@ public class GameField extends KeyPanel implements Runnable {
                 else
                     field[ty][tx] = Tetromino.NONE;
             }
+            // 同じ場所でせり上がった回数を数える
+            lineholecount++;
+            // せり上がりが4回を超えたら場所を変更
+            if (lineholecount == 2) {
+                resetLinehole();
+            }
         }
-        // 同じ場所でせり上がった回数を数える
-        lineholecount++;
         nextLines = 0;
     }
 
