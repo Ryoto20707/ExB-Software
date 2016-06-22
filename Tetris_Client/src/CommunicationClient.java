@@ -20,6 +20,7 @@ public class CommunicationClient extends Thread{
     public static final int WIN = 1;
     public static final int LOSE = 2;
     public int result = NOT_SETTLED;
+    public boolean connecting;
 
     public CommunicationClient() {
         nextMino = new LinkedList<String>();
@@ -29,17 +30,13 @@ public class CommunicationClient extends Thread{
     /**
      * サーバーに接続し、サーバーからの出力を読み取るスレッドを走らせる。
      */
-    public void connect(InetAddress addr) {
+    public void connect(InetAddress addr) throws IOException{
         this.addr = addr;
-        try {
-            // 接続
-            this.socket = new Socket(addr, PORT);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
+        // 接続
+        this.socket = new Socket(addr, PORT);
+        connecting = true;
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -58,10 +55,14 @@ public class CommunicationClient extends Thread{
                         String str = in.readLine();
                         if (str == null) {
                             JOptionPane.showMessageDialog(null, "サーバーが切断されました。");
+                            connecting = false;
                             break;
                         }
-                        else if (str.equals("exit"))// 終了処理1:exitが入力されるかサーバーが切断される
+                        else if (str.equals("exit")) {// 終了処理1:exitが入力されるかサーバーが切断される
+                            JOptionPane.showMessageDialog(null, "相手の通信が切断されました。");
+                            connecting = false;
                             break;
+                        }
                         else if(str.length() == 3 && str.equals("win")) {
                             result = WIN;
                         }

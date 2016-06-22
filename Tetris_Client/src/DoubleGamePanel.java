@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -60,12 +61,13 @@ public class DoubleGamePanel extends KeyPanel {
 
     public void start() {
         try {
-            inetAddress = InetAddress.getByName(JOptionPane.showInputDialog("サーバーのIPを入力してください。"));
+            inetAddress = InetAddress.getByName(JOptionPane.showInputDialog("サーバーのマシン名またはIPを入力してください。"));
+            client.connect(inetAddress);
         }
-        catch (UnknownHostException e) {
-            e.printStackTrace();
+        catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "サーバーが見つかりませんでした。");
+            main.change(Main.WINDOW_MODE.MODE_SELECT);
         }
-        client.connect(inetAddress);
         new Thread(new Runnable() {
             @Override
             public void run() {

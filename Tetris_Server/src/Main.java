@@ -1,8 +1,6 @@
 import java.io.*;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.net.*;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Random;
 
@@ -12,6 +10,8 @@ public class Main extends Thread{
     public static PrintWriter[] out;
     private static ServerSocket s; // フィールドに変更
     private static Socket[] sockets;
+    private static boolean[] connected = {false, false};
+    private static Thread[] th;
 
     public BufferedReader sender;
     public int id;
@@ -34,76 +34,129 @@ public class Main extends Thread{
         in = new BufferedReader[2];
         out = new PrintWriter[2];
         sockets = new Socket[2];
+        th = new Thread[2];
         System.out.println("Server起動");
-        System.out.println("IP : "+ InetAddress.getLocalHost().getHostAddress());
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
+                while(true) {
+                    try {
+                        String str = stdin.readLine();
+                        System.out.println(str);
+                        if (str.equals("exit")) {
+                            System.out.println("サーバーを終了します");// 終了処理7(サーバー側):サーバーを閉じる
+                            s.close();
+                            System.exit(0);
+                        }
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
         try {
-            acceptPlayer(0);
-            try {
-                acceptPlayer(1);
-                //-----------
-                Thread th1 = new Thread(new Main(in[0], 0));
-                Thread th2 = new Thread(new Main(in[1], 1));
-                th1.start();
-                th2.start();
-                sendStart();
-                // ---------
-                try {
-                    th1.join();
-                    th2.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            // ネットワークインターフェイスを取得
+            Enumeration testMIP = NetworkInterface.getNetworkInterfaces();
+            // 取得できた場合、処理を行う
+            if (null != testMIP) {
+                // ネットワークインターフェイスの全件を処理する
+                while (testMIP.hasMoreElements()) {
+                    // ネットワークインターフェイスを１件取得
+                    NetworkInterface testNI = (NetworkInterface) testMIP.nextElement();
+                    // ネットワークインターフェイスからInetAddressを取得
+                    Enumeration testInA = testNI.getInetAddresses();
+                    // InetAddressの全件を処理する
+                    while (testInA.hasMoreElements()) {
+                        // InetAddressを１件取得
+                        InetAddress testIP = (InetAddress)testInA.nextElement();
+                        // 取得した情報をログに出力
+                        System.out.println("IP: " + testIP.getHostName());			// IPアドレス
+                    }
                 }
-                // ---------
+            } else {
+                System.out.println("ネットワークインターフェイス未取得");
             }
-            finally {
-                try {
-                    sockets[1].close();
-                }
-                catch (IOException e) {
 
+        } catch (SocketException e) {
+            System.out.println("ネットワークインターフェイス取得エラー");
+            e.printStackTrace();
+        }
+        for (int i = 0; i <= 1; i++) {
+            final int player = i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        winnner = -1;
+                        acceptPlayer(player);
+                        while (true) {
+                            try {
+                                Thread.sleep(100);
+                            }
+                            catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            if (connected[enemy(player)]) {
+                                sendTo(player, "start");
+                                try {
+                                    th[enemy(player)].join();
+                                    sendTo(player, "exit");
+                                    connected[player] = false;
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                break;
+                            }
+                        }
+                    }
                 }
-            }
+            }).start();
         }
-        finally {
-            try {
-                sockets[0].close();
-            }
-            catch (IOException e) {
-
-            }
-        }
-        System.out.println("サーバーを終了します");// 終了処理7(サーバー側):サーバーを閉じる
-        s.close();
     }
 
     @Override
     public void run(){
-        boolean running = true;
         // 入力を検知し、動作を実行するループ
-        while(running) {
+        while(connected[id]) {
             try {
                 String read = sender.readLine();
                 // 切断されたら終了
                 if(read == null) {
-                    running = false;
+                    connected[id] = false;
                 }
                 doAction(read, id);
             }
             catch (Exception e) {
-
+                e.printStackTrace();
             }
+        }
+        try {
+            sockets[id].close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
 
-    private static void acceptPlayer(int playerID) throws IOException{
-        System.out.println((playerID+1)+"Pの参加を待っています...");
-        sockets[playerID] = s.accept();
-        in[playerID] = new BufferedReader(new InputStreamReader(sockets[playerID].getInputStream()));
-        out[playerID] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(sockets[playerID].getOutputStream())),true);
-        out[playerID].println(playerID);// プレイヤー番号を送信
-        in[playerID].readLine();
-        System.out.println((playerID+1)+"Pが参加しました");
+    private static void acceptPlayer(final int playerID) {
+        try {
+            System.out.println((playerID+1)+"Pの参加を待っています...");
+            sockets[playerID] = s.accept();
+            in[playerID] = new BufferedReader(new InputStreamReader(sockets[playerID].getInputStream()));
+            out[playerID] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(sockets[playerID].getOutputStream())),true);
+            out[playerID].println(playerID);// プレイヤー番号を送信
+            in[playerID].readLine();
+            th[playerID] = new Thread(new Main(in[playerID], playerID));
+            System.out.println((playerID+1)+"Pが参加しました");
+            connected[playerID] = true;
+            th[playerID].start();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
