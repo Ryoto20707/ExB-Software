@@ -435,14 +435,20 @@ public class GameField extends KeyPanel implements Runnable {
         else if (key == KeyEvent.VK_DOWN) {
             mino.move(Tetromino.DOWN);
         }
-        // スペースで回転
-        else if (key == KeyEvent.VK_SPACE) {
-            mino.turn();
+        // Zまたはスペースで右回転
+        else if (key == KeyEvent.VK_Z || key == KeyEvent.VK_SPACE) {
+            mino.turn(Tetromino.TURN_R);
+        }
+        // Xで左回転
+        else if (key == KeyEvent.VK_X) {
+            mino.turn(Tetromino.TURN_L);
         }
         // 上でハードドロップ
         else if (key == KeyEvent.VK_UP) {
             mino.hardDrop();
-        } else if (key == KeyEvent.VK_C) {
+        }
+        // Cでホールド
+        else if (key == KeyEvent.VK_C) {
             hold();
         }
         // 回転・移動後に再描画
