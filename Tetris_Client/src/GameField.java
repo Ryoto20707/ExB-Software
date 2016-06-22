@@ -10,7 +10,7 @@ public class GameField extends KeyPanel implements Runnable {
     private static final int HEIGHT = 22;
     public static final int COL = HEIGHT + 1;
     public static final int ROW = WIDTH + 2;
-    private static int TILE_SIZE = Window.TILE_SIZE;
+    private static int TILE_SIZE = Main.TILE_SIZE;
     private int[][] field = new int[COL][ROW];
     private boolean hold_flag;
     private Tetromino mino, nextMino, hold;
@@ -388,7 +388,7 @@ public class GameField extends KeyPanel implements Runnable {
     public void paintComponent(Graphics g) {
         // 背景色
         g.setColor(Color.BLACK);
-        g.fillRect(0, 0, Window.WIDTH, Window.HEIGHT);
+        g.fillRect(0, 0, Main.WIDTH, Main.HEIGHT);
 
         for (int y = 0; y < COL; y++) {
             for (int x = 0; x < ROW; x++) {

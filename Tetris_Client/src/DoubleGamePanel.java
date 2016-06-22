@@ -28,28 +28,28 @@ public class DoubleGamePanel extends KeyPanel {
         // 自分の盤面
         myGameField.setLayout(new BorderLayout());
         myGameField.setFocusable(true);
-        myGameField.setPreferredSize(new Dimension(Window.TILE_SIZE * GameField.ROW, Window.TILE_SIZE * GameField.COL));
+        myGameField.setPreferredSize(new Dimension(Main.TILE_SIZE * GameField.ROW, Main.TILE_SIZE * GameField.COL));
         myGameField.setVisible(true);
         add(myGameField);
 
         // 自分のステータス
         myStatPanel.setLayout(new BorderLayout());
         myStatPanel.setFocusable(true);
-        myStatPanel.setPreferredSize(new Dimension(WIDTH / 2 - Window.TILE_SIZE * GameField.ROW, HEIGHT));
+        myStatPanel.setPreferredSize(new Dimension(WIDTH / 2 - Main.TILE_SIZE * GameField.ROW, HEIGHT));
         myStatPanel.setVisible(true);
         add(myStatPanel);
 
         // 相手のステータス
         enemyStatPanel.setLayout(new BorderLayout());
         enemyStatPanel.setFocusable(true);
-        enemyStatPanel.setPreferredSize(new Dimension(WIDTH / 2 - Window.TILE_SIZE * GameField.ROW, HEIGHT));
+        enemyStatPanel.setPreferredSize(new Dimension(WIDTH / 2 - Main.TILE_SIZE * GameField.ROW, HEIGHT));
         enemyStatPanel.setVisible(true);
         add(enemyStatPanel);
 
         // 相手の盤面
         enemyGameField.setLayout(new BorderLayout());
         enemyGameField.setFocusable(true);
-        enemyGameField.setPreferredSize(new Dimension(Window.TILE_SIZE * GameField.ROW, Window.TILE_SIZE * GameField.COL));
+        enemyGameField.setPreferredSize(new Dimension(Main.TILE_SIZE * GameField.ROW, Main.TILE_SIZE * GameField.COL));
         enemyGameField.setVisible(true);
         add(enemyGameField);
 

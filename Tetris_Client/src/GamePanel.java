@@ -24,12 +24,12 @@ public class GamePanel extends KeyPanel{
 
         gameField.setLayout(new BorderLayout());
         gameField.setFocusable(true);
-        gameField.setBounds(0, 0, Window.TILE_SIZE * GameField.ROW, Window.TILE_SIZE * GameField.COL);
+        gameField.setBounds(0, 0, Main.TILE_SIZE * GameField.ROW, Main.TILE_SIZE * GameField.COL);
         gameField.setVisible(true);
         add(gameField, BorderLayout.WEST);
         statPanel.setLayout(new BorderLayout());
         statPanel.setFocusable(true);
-        statPanel.setBounds(Window.TILE_SIZE * GameField.ROW, 0, getWidth() - Window.TILE_SIZE * GameField.ROW, getHeight());
+        statPanel.setBounds(Main.TILE_SIZE * GameField.ROW, 0, getWidth() - Main.TILE_SIZE * GameField.ROW, getHeight());
         statPanel.setVisible(true);
         add(statPanel, BorderLayout.EAST);
     }

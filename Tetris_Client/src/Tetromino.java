@@ -6,7 +6,7 @@ public abstract class Tetromino{
     public static final int ROW = 4;
     public static final int COL = 4;
     
-    static final int TILE_SIZE = Window.TILE_SIZE;
+    static final int TILE_SIZE = Main.TILE_SIZE;
 
     // 移動方向
     public static final int STAY  = 0;
