@@ -2,10 +2,12 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 
 public class GamePanel extends KeyPanel{
+    private Main main;
     private GameField gameField; // テトリス盤
     private StatPanel statPanel; // ステータスパネル
 
-    public GamePanel() {
+    public GamePanel(final Main main) {
+        this.main = main;
         statPanel = new StatPanel();
         gameField = new GameField(statPanel, GameField.SINGLE, null);
     }

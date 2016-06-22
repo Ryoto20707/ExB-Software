@@ -44,6 +44,7 @@ public class Main extends JFrame implements KeyListener {
      */
     protected void change(WINDOW_MODE mode) {
         current.setVisible(false);
+        setSize(WIDTH, HEIGHT);
         switch (mode) {
             case TITLE :
                 current = title;
@@ -74,8 +75,8 @@ public class Main extends JFrame implements KeyListener {
     private void initPanel() {
         title           = new TitlePanel(this);
         modeSelect      = new ModeSelectPanel(this);
-        gamePanel       = new GamePanel();
-        doubleGamePanel = new DoubleGamePanel();
+        gamePanel       = new GamePanel(this);
+        doubleGamePanel = new DoubleGamePanel(this);
         title.          setSize(WIDTH, HEIGHT);
         modeSelect.     setSize(WIDTH, HEIGHT);
         gamePanel.      setSize(WIDTH, HEIGHT);

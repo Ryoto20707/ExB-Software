@@ -9,12 +9,13 @@ public class DoubleGamePanel extends KeyPanel {
     private StatPanel myStatPanel, enemyStatPanel; // ステータスパネル
     private CommunicationClient client;
     private InetAddress inetAddress;
-    private String hostName;
+    private Main main;
 
     public static final int WIDTH = 800;
     public static final int HEIGHT = 570;
 
-    public DoubleGamePanel() {
+    public DoubleGamePanel(final Main main) {
+        this.main = main;
         setSize(new Dimension(WIDTH, HEIGHT));
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS)); // BoxLayoutで横から詰める
         client = new CommunicationClient();
