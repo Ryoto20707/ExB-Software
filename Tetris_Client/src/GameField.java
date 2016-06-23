@@ -26,32 +26,40 @@ public class GameField extends KeyPanel implements Runnable {
     private TetrominoManager manager;
     private CommunicationClient client;
     private int player;
-    public boolean playing;
+    public boolean running, playing;
 
     GameField(StatPanel statPanel, int player, CommunicationClient client) {
         super();
         this.player = player;
+        setLayout(new BorderLayout());
+        setManager();
         switch (player) {
-            case SINGLE :
-                manager = new TetrominoManager();
-                break;
             case DOUBLE_SELF :
-                manager = new TetrominoManager(client);
-                this.client = client;
-                break;
             case DOUBLE_ENEMY :
                 this.client = client;
                 break;
             default :
                 break;
         }
-        setLayout(new BorderLayout());
         // 各パネルの紐付け
         this.statPanel = statPanel;
         this.nextPanel = statPanel.nextPanel;
         this.holdPanel = statPanel.holdPanel;
         // 盤面の初期化
         init();
+    }
+
+    private void setManager() {
+        switch (player) {
+            case SINGLE :
+                manager = new TetrominoManager();
+                break;
+            case DOUBLE_SELF :
+                manager = new TetrominoManager(client);
+                break;
+            default :
+                break;
+        }
     }
 
     /**
@@ -107,6 +115,8 @@ public class GameField extends KeyPanel implements Runnable {
     }
 
     public void run() {
+        running = true;
+        playing = false;
         mino = manager.next(this);
         nextPanel.set(mino);
         nextMino = manager.next(this);
@@ -171,6 +181,8 @@ public class GameField extends KeyPanel implements Runnable {
                 e.printStackTrace();
             }
         }
+        statPanel.message.setText("<html>Press S<br>to Restart<br>Q to Quit</html>");
+        running = false;
     }
 
     /**
@@ -197,6 +209,23 @@ public class GameField extends KeyPanel implements Runnable {
 
         // レベルを1にする
         level = 1;
+
+        setManager();
+    }
+
+    public void reset() {
+        playing = false;
+        statPanel.message.setText("Please Wait...");
+        while(running) {
+            try {
+                Thread.sleep(100);
+            }
+            catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        statPanel.message.setText("");
+        init();
     }
 
     /**
@@ -419,33 +448,39 @@ public class GameField extends KeyPanel implements Runnable {
 
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
-        // 左
-        if (key == KeyEvent.VK_LEFT) {
-            mino.move(Tetromino.LEFT);
+        if(playing) {
+            // 左
+            if (key == KeyEvent.VK_LEFT) {
+                mino.move(Tetromino.LEFT);
+            }
+            // 右
+            else if (key == KeyEvent.VK_RIGHT) {
+                mino.move(Tetromino.RIGHT);
+            }
+            // 下
+            else if (key == KeyEvent.VK_DOWN) {
+                mino.move(Tetromino.DOWN);
+            }
+            // Zまたはスペースで右回転
+            else if (key == KeyEvent.VK_Z || key == KeyEvent.VK_SPACE) {
+                mino.turn(Tetromino.TURN_R);
+            }
+            // Xで左回転
+            else if (key == KeyEvent.VK_X) {
+                mino.turn(Tetromino.TURN_L);
+            }
+            // 上でハードドロップ
+            else if (key == KeyEvent.VK_UP) {
+                mino.hardDrop();
+            }
+            // Cでホールド
+            else if (key == KeyEvent.VK_C) {
+                hold();
+            }
         }
-        // 右
-        else if (key == KeyEvent.VK_RIGHT) {
-            mino.move(Tetromino.RIGHT);
-        }
-        // 下
-        else if (key == KeyEvent.VK_DOWN) {
-            mino.move(Tetromino.DOWN);
-        }
-        // Zまたはスペースで右回転
-        else if (key == KeyEvent.VK_Z || key == KeyEvent.VK_SPACE) {
-            mino.turn(Tetromino.TURN_R);
-        }
-        // Xで左回転
-        else if (key == KeyEvent.VK_X) {
-            mino.turn(Tetromino.TURN_L);
-        }
-        // 上でハードドロップ
-        else if (key == KeyEvent.VK_UP) {
-            mino.hardDrop();
-        }
-        // Cでホールド
-        else if (key == KeyEvent.VK_C) {
-            hold();
+        else if(!running && key == KeyEvent.VK_S) {
+            init();
+            start();
         }
         // 回転・移動後に再描画
         repaint();

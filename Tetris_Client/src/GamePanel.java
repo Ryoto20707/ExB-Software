@@ -16,10 +16,6 @@ public class GamePanel extends KeyPanel{
         gameField.start();
     }
 
-    public void init() {
-        gameField.init();
-    }
-
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -43,6 +39,10 @@ public class GamePanel extends KeyPanel{
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if(e.getKeyCode() == KeyEvent.VK_Q && gameField.running && gameField.playing) {
+            gameField.reset();
+            main.change(Main.WINDOW_MODE.MODE_SELECT);
+        }
         gameField.keyPressed(e);
     }
 
