@@ -87,17 +87,39 @@ public class StatPanel extends JPanel {
      */
     public void setMessage(String msg, final int time) {
         message.setText(msg);
-       new Thread(new Runnable() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(time);
+                    message.setText("");
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+    /**
+     * メッセージパネルの色を一定時間変える
+     * 別スレッドで実行することで本来の操作を止めない。
+     * @param color 色
+     * @param time 表示時間
+     */
+    public void setMessageBackground(Color color, final int time) {
+        message.setBackground(color);
+        new Thread(new Runnable() {
            @Override
            public void run() {
                try {
                    Thread.sleep(time);
-                   message.setText("");
+                   message.setBackground(Color.LIGHT_GRAY);
                }
                catch (InterruptedException e) {
-
+                   e.printStackTrace();
                }
            }
-       }).start();
+        }).start();
     }
 }

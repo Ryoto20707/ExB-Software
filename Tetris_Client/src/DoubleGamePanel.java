@@ -93,7 +93,8 @@ public class DoubleGamePanel extends KeyPanel {
                 while(true) {
                     if (client.attack != 0) {
                         myGameField.nextLines += client.attack;
-                        myStatPanel.setMessage("Atk " + client.attack + "lines!", 1000);
+                        myStatPanel.setMessage("Atk " + client.attack + "lines!", 2000);
+                        myStatPanel.setMessageBackground(Color.RED, 2000);
                         client.attack = 0;
                     }
                     if(!client.connecting) {
