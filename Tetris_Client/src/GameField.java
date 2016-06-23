@@ -324,8 +324,12 @@ public class GameField extends KeyPanel implements Runnable {
     // 相手に送る列数を数える
     private int attackLines(int deletedLines) {
         switch (deletedLines) {
+        case 2:
+            return (int)(level * 0.3);
+        case 3:
+            return 1 + (int)(level * 0.5);
         case 4:
-            return 2;
+            return 2 + (int)(level * 0.7);
         default:
             return 0;
         }
