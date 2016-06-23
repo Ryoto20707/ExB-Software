@@ -60,18 +60,10 @@ public abstract class Tetromino{
                 if (block[i][j] != NONE) {
                     // ブロックの描画
                     g.setColor(getColor(block[i][j]));
-                    g.fillRect((pos.x + j) *  TILE_SIZE,
-                            (pos.y + i) *  TILE_SIZE,  TILE_SIZE,  TILE_SIZE);
+                    g.fillRect((pos.x + j) * TILE_SIZE, (pos.y + i) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     // 枠線の描画
                     g.setColor(Color.WHITE);
-                    g.drawLine((pos.x + j)     * TILE_SIZE, (pos.y + i)     *  TILE_SIZE,
-                               (pos.x + j + 1) * TILE_SIZE, (pos.y + i)     *  TILE_SIZE);
-                    g.drawLine((pos.x + j)     * TILE_SIZE, (pos.y + i)     *  TILE_SIZE,
-                               (pos.x + j)     * TILE_SIZE, (pos.y + i + 1) *  TILE_SIZE);
-                    g.drawLine((pos.x + j + 1) * TILE_SIZE, (pos.y + i)     *  TILE_SIZE,
-                               (pos.x + j + 1) * TILE_SIZE, (pos.y + i + 1) *  TILE_SIZE);
-                    g.drawLine((pos.x + j)     * TILE_SIZE, (pos.y + i + 1) *  TILE_SIZE,
-                               (pos.x + j + 1) * TILE_SIZE, (pos.y + i + 1) *  TILE_SIZE);
+                    g.drawRect((pos.x + j) * TILE_SIZE, (pos.y + i) * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 }
             }
         }

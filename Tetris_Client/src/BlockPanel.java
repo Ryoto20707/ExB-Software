@@ -22,13 +22,10 @@ public class BlockPanel extends JPanel {
                     if (mino.block[i][j] != Tetromino.NONE) {
                         // ブロックの描画
                         g.setColor(Tetromino.getColor(mino.block[i][j]));
-                        g.fillRect(j *  MINI_TILE_SIZE + 10, i *  MINI_TILE_SIZE + 10, MINI_TILE_SIZE, MINI_TILE_SIZE);
+                        g.fillRect(j * MINI_TILE_SIZE + 10, i *  MINI_TILE_SIZE + 10, MINI_TILE_SIZE, MINI_TILE_SIZE);
                         // 枠線の描画
                         g.setColor(Color.WHITE);
-                        g.drawLine(j * MINI_TILE_SIZE + 10, i *  MINI_TILE_SIZE + 10, (j + 1) * MINI_TILE_SIZE + 10, i *  MINI_TILE_SIZE + 10);
-                        g.drawLine(j * MINI_TILE_SIZE + 10, i *  MINI_TILE_SIZE + 10, j * MINI_TILE_SIZE + 10, (i + 1) *  MINI_TILE_SIZE + 10);
-                        g.drawLine((j + 1) * MINI_TILE_SIZE + 10, i *  MINI_TILE_SIZE + 10, (j + 1) * MINI_TILE_SIZE + 10, (i + 1) * MINI_TILE_SIZE + 10);
-                        g.drawLine(j * MINI_TILE_SIZE + 10, (i + 1) *  MINI_TILE_SIZE + 10, (j + 1) * MINI_TILE_SIZE + 10, (i + 1) *  MINI_TILE_SIZE + 10);
+                        g.drawRect(j * MINI_TILE_SIZE + 10, i *  MINI_TILE_SIZE + 10, MINI_TILE_SIZE, MINI_TILE_SIZE);
                     }
                 }
             }

@@ -400,14 +400,7 @@ public class GameField extends KeyPanel implements Runnable {
                     if (field[y][x] != Tetromino.WALL && field[y][x] != Tetromino.NONE) {
                         // 枠線の描画
                         g.setColor(Color.WHITE);
-                        g.drawLine( x      * TILE_SIZE,  y      *  TILE_SIZE,
-                                   (x + 1) * TILE_SIZE,  y      *  TILE_SIZE);
-                        g.drawLine( x      * TILE_SIZE,  y      *  TILE_SIZE,
-                                    x      * TILE_SIZE, (y + 1) *  TILE_SIZE);
-                        g.drawLine((x + 1) * TILE_SIZE,  y      *  TILE_SIZE,
-                                   (x + 1) * TILE_SIZE, (y + 1) *  TILE_SIZE);
-                        g.drawLine( x      * TILE_SIZE, (y + 1) *  TILE_SIZE,
-                                   (x + 1) * TILE_SIZE, (y + 1) *  TILE_SIZE);
+                        g.drawRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     }
                 }
             }
