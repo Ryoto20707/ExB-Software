@@ -26,6 +26,7 @@ public class GameField extends KeyPanel implements Runnable {
     private TetrominoManager manager;
     private CommunicationClient client;
     private int player;
+    public boolean playing;
 
     GameField(StatPanel statPanel, int player, CommunicationClient client) {
         super();
@@ -126,7 +127,8 @@ public class GameField extends KeyPanel implements Runnable {
         hold_flag = false;
         nextPanel.set(nextMino);
         resetLinehole();
-        while (true) {
+        playing = true;
+        while (playing) {
             // ブロックを下方向へ移動する
             boolean isFixed = mino.move(Tetromino.DOWN);
             if (isFixed) {  // ブロックが固定されたら
@@ -144,8 +146,9 @@ public class GameField extends KeyPanel implements Runnable {
 
                 if (isStacked()) {
                     repaint(); // ゲームオーバー後にも更新
-                    JOptionPane.showMessageDialog(null, "GameOver!");
                     send("gameOver");
+                    JOptionPane.showMessageDialog(null, "GameOver!");
+                    playing = false;
                     break;
                 }
                 // 10ライン消すごとにレベルアップ(上限は10)

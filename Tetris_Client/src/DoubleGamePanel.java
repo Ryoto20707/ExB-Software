@@ -102,10 +102,12 @@ public class DoubleGamePanel extends KeyPanel {
                     if(client.result == CommunicationClient.WIN) {
                         myStatPanel.message.setText("WIN");
                         enemyStatPanel.message.setText("LOSE");
+                        myGameField.playing = false;
                     }
                     if(client.result == CommunicationClient.LOSE) {
                         myStatPanel.message.setText("LOSE");
                         enemyStatPanel.message.setText("WIN");
+                        myGameField.playing = false;
                     }
                     try {
                         Thread.sleep(1000);
