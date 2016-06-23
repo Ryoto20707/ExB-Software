@@ -81,14 +81,17 @@ public class Main extends JFrame implements KeyListener {
         doubleGamePanel = new DoubleGamePanel(this);
         title.          setSize(WIDTH, HEIGHT);
         modeSelect.     setSize(WIDTH, HEIGHT);
+        howto.          setSize(WIDTH, HEIGHT);
         gamePanel.      setSize(WIDTH, HEIGHT);
         doubleGamePanel.setSize(DoubleGamePanel.WIDTH, HEIGHT);
         title.          setVisible(false);
         modeSelect.     setVisible(false);
+        howto.          setVisible(false);
         gamePanel.      setVisible(false);
         doubleGamePanel.setVisible(false);
         add(title);
         add(modeSelect);
+        add(howto);
         add(gamePanel);
         add(doubleGamePanel);
     }
