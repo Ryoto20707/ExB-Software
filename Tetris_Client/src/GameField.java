@@ -346,11 +346,11 @@ public class GameField extends KeyPanel implements Runnable {
     private int attackLines(int deletedLines) {
         switch (deletedLines) {
         case 2:
-            return (int)(level * 0.3);
+            return (int)(0.4 + level * 0.2);
         case 3:
-            return 1 + (int)(level * 0.5);
+            return (int)(0.7 + level * 0.3);
         case 4:
-            return 2 + (int)(level * 0.7);
+            return (int)(1.6 + level * 0.4);
         default:
             return 0;
         }

@@ -31,7 +31,7 @@ public abstract class Tetromino{
 
     public static Color color;
 
-    private int fixcount = 5; // 遊び猶予回数
+    private int fixcount = 8; // 遊び猶予回数
 
     /**
      * テトロミノの初期化
