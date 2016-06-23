@@ -11,13 +11,13 @@ public class Main extends JFrame implements KeyListener {
 
     // 画面の種類
     protected enum WINDOW_MODE {
-        TITLE, MODE_SELECT, PLAY, DOUBLE_PLAY, RESULT
+        TITLE, MODE_SELECT, HOWTO, PLAY, DOUBLE_PLAY
     }
 
     // 現在の画面（他の具体的な画面への参照とする）
     private KeyPanel current;
     // 実際に使用する画面たち
-    private KeyPanel title, modeSelect, result;
+    private KeyPanel title, modeSelect, howto;
     private GamePanel gamePanel;
     private DoubleGamePanel doubleGamePanel;
 
@@ -52,6 +52,9 @@ public class Main extends JFrame implements KeyListener {
             case MODE_SELECT:
                 current = modeSelect;
                 break;
+            case HOWTO:
+                current = howto;
+                break;
             case PLAY:
                 current = gamePanel;
                 gamePanel.start(); // ゲームを開始する
@@ -60,8 +63,6 @@ public class Main extends JFrame implements KeyListener {
                 setSize(DoubleGamePanel.WIDTH, DoubleGamePanel.HEIGHT);
                 current = doubleGamePanel;
                 doubleGamePanel.start(); // ゲームを開始する
-                break;
-            case RESULT:
                 break;
             default:
                 break;
@@ -75,6 +76,7 @@ public class Main extends JFrame implements KeyListener {
     private void initPanel() {
         title           = new TitlePanel(this);
         modeSelect      = new ModeSelectPanel(this);
+        howto           = new HowtoPanel(this);
         gamePanel       = new GamePanel(this);
         doubleGamePanel = new DoubleGamePanel(this);
         title.          setSize(WIDTH, HEIGHT);

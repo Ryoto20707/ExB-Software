@@ -41,16 +41,18 @@ public class StatPanel extends JPanel {
         // スコアのラベル、初期値0
         scoreDisp = new JLabel("0");
         scoreDisp.setVisible(true);
-        scoreDisp.setBounds(20, 278, 80, 20);
+        scoreDisp.setBounds(20, 278, 70, 20);
         scoreDisp.setBackground(Color.LIGHT_GRAY);
         scoreDisp.setOpaque(true);
+        scoreDisp.setHorizontalAlignment(SwingConstants.RIGHT);
         add(scoreDisp);
         // メッセージ
         message = new JLabel();
         message.setVisible(true);
-        message.setBounds(20, 320, 80, 60);
+        message.setBounds(10, 320, 90, 60);
         message.setBackground(Color.LIGHT_GRAY);
         message.setOpaque(true);
+        message.setHorizontalAlignment(SwingConstants.CENTER);
         add(message);
         // レベル
         level = new JLabel("Level 1");
