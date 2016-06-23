@@ -4,7 +4,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Random;
 
-public class Main extends Thread{
+public class Main implements Runnable {
     public static final int PORT = 8080;
     public static BufferedReader[] in;
     public static PrintWriter[] out;
@@ -43,7 +43,6 @@ public class Main extends Thread{
                 while(true) {
                     try {
                         String str = stdin.readLine();
-                        System.out.println(str);
                         if (str.equals("exit")) {
                             System.out.println("サーバーを終了します");// 終了処理7(サーバー側):サーバーを閉じる
                             s.close();
@@ -102,11 +101,14 @@ public class Main extends Thread{
                                 sendTo(player, "start");
                                 try {
                                     th[enemy(player)].join();
-                                    sendTo(player, "exit");
-                                    connected[player] = false;
+                                    sendTo(player, "disconnected");
+                                    disconnect(player);
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
+                                break;
+                            }
+                            else if(!connected[player]) {
                                 break;
                             }
                         }
@@ -121,10 +123,19 @@ public class Main extends Thread{
         // 入力を検知し、動作を実行するループ
         while(connected[id]) {
             try {
-                String read = sender.readLine();
+                String read;
+                try {
+                    read = sender.readLine();
+                }
+                catch (SocketException e) {
+                    disconnect(id);
+                    break;
+                }
                 // 切断されたら終了
-                if(read == null) {
-                    connected[id] = false;
+                if(read == null || read.equals("exit")) {
+                    sendTo(id, "exit");
+                    disconnect(id);
+                    break;
                 }
                 doAction(read, id);
             }
@@ -140,6 +151,17 @@ public class Main extends Thread{
         }
     }
 
+    private static void disconnect(final int playerID) {
+        System.out.println((playerID + 1) + "Pが切断されました");
+        try {
+            sockets[playerID].close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        connected[playerID] = false;
+        mapCount[playerID] = 0;
+    }
 
     private static void acceptPlayer(final int playerID) {
         try {
@@ -147,8 +169,8 @@ public class Main extends Thread{
             sockets[playerID] = s.accept();
             in[playerID] = new BufferedReader(new InputStreamReader(sockets[playerID].getInputStream()));
             out[playerID] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(sockets[playerID].getOutputStream())),true);
-            out[playerID].println(playerID);// プレイヤー番号を送信
             in[playerID].readLine();
+            out[playerID].println(playerID);// プレイヤー番号を送信
             th[playerID] = new Thread(new Main(in[playerID], playerID));
             System.out.println((playerID+1)+"Pが参加しました");
             connected[playerID] = true;
@@ -197,10 +219,6 @@ public class Main extends Thread{
                     }
                 }
                 break;
-            case 'E':  // end of game
-                displayResult();  // 勝敗結果を表示する
-                break;
-
         }
     }
 
@@ -212,18 +230,6 @@ public class Main extends Thread{
 
     private static void sendTo(int target, String str) {
         out[target].println(str);
-    }
-
-    private void displayResult() {
-        // 勝敗結果を表示する
-    }
-
-    /**
-     * 開始の合図を送信
-     */
-    private static void sendStart() {
-        sendTo(0, "start");
-        sendTo(1, "start");
     }
 
     /**

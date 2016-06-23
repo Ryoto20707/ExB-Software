@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
 public class GameField extends KeyPanel implements Runnable {
@@ -27,6 +29,23 @@ public class GameField extends KeyPanel implements Runnable {
     private CommunicationClient client;
     private int player;
     public boolean running, playing;
+    public Timer traceEnemy = new Timer(1000, new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(!client.enemyField.equals("")) {
+                setField(client.enemyField);
+                client.enemyField = "";
+
+                statPanel.setLevel(client.enemyLevel);
+                statPanel.changeScore(client.enemyScore);
+                nextPanel.set(client.enemyNext);
+            }
+            if(client.enemyHold != -1) {
+                holdPanel.set(client.enemyHold);
+                client.enemyHold = -1;
+            }
+        }
+    });
 
     GameField(StatPanel statPanel, int player, CommunicationClient client) {
         super();
@@ -67,37 +86,6 @@ public class GameField extends KeyPanel implements Runnable {
      */
     public void start() {
         new Thread(this).start();
-    }
-
-    /**
-     * マルチプレイの相手画面トレースの開始
-     */
-    public void startEnemy() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(true) {
-                    if(!client.enemyField.equals("")) {
-                        setField(client.enemyField);
-                        client.enemyField = "";
-
-                        statPanel.setLevel(client.enemyLevel);
-                        statPanel.changeScore(client.enemyScore);
-                        nextPanel.set(client.enemyNext);
-                    }
-                    if(client.enemyHold != -1) {
-                        holdPanel.set(client.enemyHold);
-                        client.enemyHold = -1;
-                    }
-                    try {
-                        Thread.sleep(1000);
-                    }
-                    catch (Exception e) {
-
-                    }
-                }
-            }
-        }).start();
     }
 
     /**
@@ -181,7 +169,7 @@ public class GameField extends KeyPanel implements Runnable {
                 e.printStackTrace();
             }
         }
-        statPanel.message.setText("<html>Press S<br>to Restart<br>Q to Quit</html>");
+        if(player == SINGLE) statPanel.message.setText("<html>Press S<br>to Restart<br>Q to Quit</html>");
         running = false;
     }
 
@@ -210,6 +198,7 @@ public class GameField extends KeyPanel implements Runnable {
         // レベルを1にする
         level = 1;
 
+        mino = null;
         setManager();
     }
 
@@ -447,8 +436,8 @@ public class GameField extends KeyPanel implements Runnable {
     }
 
     public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
         if(playing) {
+            int key = e.getKeyCode();
             // 左
             if (key == KeyEvent.VK_LEFT) {
                 mino.move(Tetromino.LEFT);
@@ -477,13 +466,9 @@ public class GameField extends KeyPanel implements Runnable {
             else if (key == KeyEvent.VK_C) {
                 hold();
             }
+            // 回転・移動後に再描画
+            repaint();
         }
-        else if(!running && key == KeyEvent.VK_S) {
-            init();
-            start();
-        }
-        // 回転・移動後に再描画
-        repaint();
     }
 
     public void keyReleased(KeyEvent e) {

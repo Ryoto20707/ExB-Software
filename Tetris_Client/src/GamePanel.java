@@ -43,6 +43,10 @@ public class GamePanel extends KeyPanel{
             gameField.reset();
             main.change(Main.WINDOW_MODE.MODE_SELECT);
         }
+        else if(e.getKeyCode() == KeyEvent.VK_S && !gameField.running) {
+            gameField.init();
+            gameField.start();
+        }
         gameField.keyPressed(e);
     }
 

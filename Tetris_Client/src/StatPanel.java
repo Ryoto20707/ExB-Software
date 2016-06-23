@@ -61,6 +61,14 @@ public class StatPanel extends JPanel {
         add(level);
     }
 
+    public void init() {
+        nextPanel.set(null);
+        holdPanel.set(null);
+        scoreDisp.setText("0");
+        message.setText("");
+        level.setText("Level 1");
+    }
+
     /**
      * スコアを更新、反映
      * @param newScore 新しいスコア
