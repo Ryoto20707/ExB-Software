@@ -10,7 +10,6 @@ public class CommunicationClient extends Thread{
     private InetAddress addr;
     public BufferedReader in;
     private PrintWriter out;
-    private boolean accepting = true; // Serverからの受付処理を受付中かどうか
     public Socket socket;
     public static final int PORT = 8080;  // Serverのport番号をここにも指定しておく
     private Queue<String> nextMino, general; // 次のミノと一般命令をそれぞれ格納するキュー
@@ -123,19 +122,6 @@ public class CommunicationClient extends Thread{
     public int sendToServer(String str) {
         out.println(str);
         return 0;
-    }
-    /**
-     * インスタンスのInetAddressを取得する(getter)
-     */
-    public InetAddress getAddr(){
-        return this.addr;
-    }
-
-    /**
-     * クライアントでのサーバからの通信受付処理を停止する
-     */
-    public void stopAcceptFromServer(){
-        accepting = false;
     }
 
     /**
