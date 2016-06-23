@@ -8,7 +8,7 @@ public class Main implements Runnable {
     public static final int PORT = 8080;
     public static BufferedReader[] in;
     public static PrintWriter[] out;
-    private static ServerSocket s; // フィールドに変更
+    public static ServerSocket s; // フィールドに変更
     private static Socket[] sockets;
     private static boolean[] connected = {false, false};
     private static Thread[] th;
@@ -22,20 +22,36 @@ public class Main implements Runnable {
     private int before = -1;
     private static int winnner;
 
+    private static GUIFrame gui;
+
     // スレッド用コンストラクタ
     Main(BufferedReader sender, int id) {
         this.sender = sender;
         this.id = id;
     }
 
-
-    public static void main(String[] args) throws IOException {
-        s = new ServerSocket(PORT);
+    /**
+     * TODO
+     * 切断が二回
+     * IPとマシン名表示
+     */
+    public static void main(String[] args) {
+        gui = new GUIFrame();
         in = new BufferedReader[2];
         out = new PrintWriter[2];
         sockets = new Socket[2];
         th = new Thread[2];
-        System.out.println("Server起動");
+    }
+
+    public static void open() {
+        try {
+            s = new ServerSocket(PORT);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        gui.connect.setVisible(false);
+        gui.disconnect.setVisible(true);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -44,9 +60,7 @@ public class Main implements Runnable {
                     try {
                         String str = stdin.readLine();
                         if (str.equals("exit")) {
-                            System.out.println("サーバーを終了します");// 終了処理7(サーバー側):サーバーを閉じる
                             s.close();
-                            System.exit(0);
                         }
                     }
                     catch (IOException e) {
@@ -56,6 +70,7 @@ public class Main implements Runnable {
             }
         }).start();
         try {
+            System.out.println(s);
             // ネットワークインターフェイスを取得
             Enumeration testMIP = NetworkInterface.getNetworkInterfaces();
             // 取得できた場合、処理を行う
@@ -71,7 +86,7 @@ public class Main implements Runnable {
                         // InetAddressを１件取得
                         InetAddress testIP = (InetAddress)testInA.nextElement();
                         // 取得した情報をログに出力
-                        System.out.println("IP: " + testIP.getHostName());			// IPアドレス
+                        gui.IPs.append("Address: " + testIP.getHostAddress()+"\n");	// IPアドレス
                     }
                 }
             } else {
@@ -101,9 +116,12 @@ public class Main implements Runnable {
                                 sendTo(player, "start");
                                 try {
                                     th[enemy(player)].join();
-                                    sendTo(player, "disconnected");
-                                    disconnect(player);
-                                } catch (Exception e) {
+                                    if(connected[player]) {
+                                        sendTo(player, "disconnected");
+                                        disconnect(player);
+                                    }
+                                }
+                                catch (Exception e) {
                                     e.printStackTrace();
                                 }
                                 break;
@@ -126,16 +144,15 @@ public class Main implements Runnable {
                 String read;
                 try {
                     read = sender.readLine();
+                    // 切断されたら終了
+                    if(read == null || read.equals("exit")) {
+                        sendTo(id, "exit");
+                        disconnect(id);
+                        break;
+                    }
                 }
                 catch (SocketException e) {
-                    disconnect(id);
-                    break;
-                }
-                // 切断されたら終了
-                if(read == null || read.equals("exit")) {
-                    sendTo(id, "exit");
-                    disconnect(id);
-                    break;
+                    return;
                 }
                 doAction(read, id);
             }
@@ -152,7 +169,8 @@ public class Main implements Runnable {
     }
 
     private static void disconnect(final int playerID) {
-        System.out.println((playerID + 1) + "Pが切断されました");
+//        System.out.println((playerID + 1) + "Pが切断されました");
+        gui.changeStatus(playerID, false);
         try {
             sockets[playerID].close();
         }
@@ -166,13 +184,14 @@ public class Main implements Runnable {
     private static void acceptPlayer(final int playerID) {
         try {
             System.out.println((playerID+1)+"Pの参加を待っています...");
-            sockets[playerID] = s.accept();
+                sockets[playerID] = s.accept();
             in[playerID] = new BufferedReader(new InputStreamReader(sockets[playerID].getInputStream()));
             out[playerID] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(sockets[playerID].getOutputStream())),true);
             in[playerID].readLine();
             out[playerID].println(playerID);// プレイヤー番号を送信
             th[playerID] = new Thread(new Main(in[playerID], playerID));
-            System.out.println((playerID+1)+"Pが参加しました");
+//            System.out.println((playerID+1)+"Pが参加しました");
+            gui.changeStatus(playerID, true);
             connected[playerID] = true;
             th[playerID].start();
         }
