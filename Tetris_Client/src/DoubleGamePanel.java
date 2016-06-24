@@ -72,10 +72,14 @@ public class DoubleGamePanel extends KeyPanel {
 
     }
 
+    /**
+     * ダブルプレイを開始する
+     */
     public void start() {
+        // サーバーのアドレス取得
         final InetAddress inetAddress;
         try {
-            inetAddress = InetAddress.getByName(JOptionPane.showInputDialog("サーバーのマシン名またはIPを入力してください。"));
+            inetAddress = InetAddress.getByName(JOptionPane.showInputDialog("サーバーのマシン名を入力してください。"));
         }
         catch (UnknownHostException e) {
             JOptionPane.showMessageDialog(null, "宛先が不正です。");
@@ -83,6 +87,7 @@ public class DoubleGamePanel extends KeyPanel {
             return;
         }
 
+        // サーバーに接続する前に接続中の画面を表示する
         dialog = new JFrame("Connecting");
         JPanel dialogPanel = new JPanel();
         dialogPanel.setLayout(new BorderLayout());
@@ -99,6 +104,7 @@ public class DoubleGamePanel extends KeyPanel {
         dialogCancel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // キャンセルボタンクリックで中止
                 try {
                     client.socket.close();
                 }
@@ -112,21 +118,24 @@ public class DoubleGamePanel extends KeyPanel {
         dialogCancel.setVisible(true);
         dialogPanel.add(dialogCancel, BorderLayout.PAGE_END);
         dialogPanel.setVisible(true);
-        dialog.pack();
         dialog.setVisible(true);
 
+        // 接続を開始する
         new Thread(new Runnable() {
             @Override
             public void run() {
+                // 指定されたアドレスへの接続を試みる
                 try {
                     client.connect(inetAddress);
                 }
+                // 失敗時は通知してモード選択画面に戻る
                 catch(IOException e) {
                     JOptionPane.showMessageDialog(null, "サーバーが見つかりませんでした。");
                     dialog.dispose();
                     main.change(Main.WINDOW_MODE.MODE_SELECT);
                     return;
                 }
+                // 接続に成功するまで待機
                 while(!client.connecting) {
                     try {
                         Thread.sleep(100);
@@ -135,42 +144,50 @@ public class DoubleGamePanel extends KeyPanel {
                         e.printStackTrace();
                     }
                 }
+                // 接続に成功したら接続中画面を切る
                 dialog.dispose();
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        myStatPanel.message.setText("通信待機中");
-                        while(true) {
-                            if(client.getGeneral().equals("start")) {
-                                break;
-                            }
-                            try {
-                                Thread.sleep(100);
-                            }
-                            catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        myGameField.start();
-                        enemyGameField.traceEnemy.start();
+
+                // 相手の接続を待つ
+                myStatPanel.message.setText("通信待機中");
+                while(true) {
+                    if(client.getGeneral().equals("start")) {
+                        break;
                     }
-                }).start();
+                    try {
+                        Thread.sleep(100);
+                    }
+                    catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                // 相手が接続、サーバーから通知が来たらゲーム開始
+                myGameField.start();
+                enemyGameField.traceEnemy.start();
+
+                /*
+                 * ゲーム中のクライアント処理は基本的にGameFieldが行っているが、そこで行えない処理をここで担う。
+                 * 相手の攻撃、相手の切断、勝敗処理について行う
+                 */
                 final Timer clientWatcher = new Timer(1000, null);
                 clientWatcher.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
+                        // 相手の攻撃が発生したら通知・設定。クライアントのフィールドは初期化する
                         if (client.attack != 0) {
                             myGameField.nextLines += client.attack;
                             myStatPanel.setMessage("Atk " + client.attack + "lines!", 2000);
                             myStatPanel.setMessageBackground(Color.RED, 2000);
                             client.attack = 0;
                         }
+                        // 相手が切断したらゲーム終了。このTimerも切る。
                         if(!client.connecting) {
                             main.change(Main.WINDOW_MODE.MODE_SELECT);
                             finishGame();
                             init();
                             clientWatcher.stop();
                         }
+                        // 勝敗判定
                         if(client.result == CommunicationClient.LOSE) {
                             myStatPanel.message.setText("LOSE");
                             enemyStatPanel.message.setText("<html>Press Q<br>to Quit<html>");
@@ -188,10 +205,16 @@ public class DoubleGamePanel extends KeyPanel {
         }).start();
     }
 
+    /**
+     * ダブルプレイウィンドウからモード選択画面に切り替える
+     */
     private void close() {
         main.change(Main.WINDOW_MODE.MODE_SELECT);
     }
 
+    /**
+     * ゲーム終了処理
+     */
     private void finishGame() {
         myGameField.playing = false;
         enemyGameField.traceEnemy.stop();
@@ -204,11 +227,13 @@ public class DoubleGamePanel extends KeyPanel {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        // 決着後にQボタンで終了
         if(e.getKeyCode() == KeyEvent.VK_Q && !myGameField.running && !myGameField.playing) {
             client.sendToServer("exit");
             init();
             main.change(Main.WINDOW_MODE.MODE_SELECT);
         }
+        // それ以外はGameFieldに伝播
         myGameField.keyPressed(e);
     }
 

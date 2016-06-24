@@ -6,69 +6,88 @@ import java.util.Random;
 
 public class Main implements Runnable {
     public static final int PORT = 8080;
-    public static BufferedReader[] in;
-    public static PrintWriter[] out;
-    public static ServerSocket s; // フィールドに変更
-    private static Socket[] sockets;
-    private static boolean[] connected = {false, false};
-    private static Thread[] th;
+    public static BufferedReader[]  in = new BufferedReader[2];
+    public static PrintWriter[]    out = new PrintWriter[2];
+    public static ServerSocket s; // サーバーソケット
+    private static Socket[] sockets    = new Socket[2]; // クライアント接続ソケット
+    private static Thread[] th         = new Thread[2]; // クライアント接続用スレッド
+    private static boolean[] connected = {false, false}; // 1P, 2Pが接続されているか
+    private static boolean[] minoflag  = new boolean[7]; // ミノが偏らないようにするための処理に使う
+    private static final HashMap<Integer, Integer> minoMap = new HashMap<Integer, Integer>(); // 落下ミノ共通化のためのハッシュマップ
+    private static Random rand = new Random(System.currentTimeMillis()); // テトロミノ発生乱数
+    private static int[] mapCount = {0, 0}; // minoMapのプレイヤーごとのインデックス
+    private static int winnner;  // 勝者ID。0or1or-1(初期)
+    private static GUIFrame gui; // 表示GUI
 
-    public BufferedReader sender;
-    public int id;
-    private static Random rand = new Random(System.currentTimeMillis());
-    private static boolean[] minoflag = new boolean[7];// ミノが偏らないようにするための処理に使う
-    private static final HashMap<Integer, Integer> minoMap = new HashMap<Integer, Integer>();
-    private static int[] mapCount = {0, 0};
-    private int before = -1;
-    private static int winnner;
+    // スレッド用
+    public BufferedReader reader; // in[player]が渡される。
+    public int id;                // 接続しているプレイヤー(0or1)
+    private int before = -1;      // 直前に発生させたテトロミノID
 
-    private static GUIFrame gui;
 
     // スレッド用コンストラクタ
-    Main(BufferedReader sender, int id) {
-        this.sender = sender;
+    Main(BufferedReader reader, int id) {
+        this.reader = reader;
         this.id = id;
     }
 
-    /**
-     * TODO
-     * 切断が二回
-     * IPとマシン名表示
-     */
     public static void main(String[] args) {
+        // GUI表示
         gui = new GUIFrame();
-        in = new BufferedReader[2];
-        out = new PrintWriter[2];
-        sockets = new Socket[2];
-        th = new Thread[2];
     }
 
+    // 入力を検知し、動作を実行するループ
+    @Override
+    public void run(){
+        while(connected[id]) {
+            try {
+                String read;
+                try {
+                    read = reader.readLine();
+                    /*
+                     * nullはクライアントが切断した時
+                     * "exit"はクライアントから終了命令がきた時
+                     */
+                    if(read == null || read.equals("exit")) {
+                        // 切断処理
+                        sendTo(id, "exit");
+                        disconnect(id);
+                        break;
+                    }
+                }
+                catch (SocketException e) {
+                    return;
+                }
+                doAction(read, id); // 入力に対して処理を実行
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        // 切断後にソケットを閉じる
+        try {
+            sockets[id].close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * サーバー開設
+     */
     public static void open() {
+        // ソケットを開く
         try {
             s = new ServerSocket(PORT);
         }
         catch (IOException e) {
             e.printStackTrace();
         }
+        // GUIボタンを「接続する」から「終了する」に切り替える
         gui.connect.setVisible(false);
         gui.disconnect.setVisible(true);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                BufferedReader stdin = new BufferedReader(new InputStreamReader(System.in));
-                while(true) {
-                    try {
-                        String str = stdin.readLine();
-                        if (str.equals("exit")) {
-                            s.close();
-                        }
-                    }
-                    catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }).start();
+        // テキストエリアにネットワークアドレスをすべて表示
         try {
             System.out.println(s);
             // ネットワークインターフェイスを取得
@@ -90,20 +109,23 @@ public class Main implements Runnable {
                     }
                 }
             } else {
-                System.out.println("ネットワークインターフェイス未取得");
+                gui.IPs.append("ネットワークインターフェイス未取得");
             }
-
-        } catch (SocketException e) {
-            System.out.println("ネットワークインターフェイス取得エラー");
+        }
+        catch (SocketException e) {
             e.printStackTrace();
         }
+
+        // プレイヤーとの接続に関するスレッドを2つ(人数分)立てる
         for (int i = 0; i <= 1; i++) {
             final int player = i;
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     while (true) {
+                        // 勝者初期化
                         winnner = -1;
+                        // 接続を受け付ける
                         acceptPlayer(player);
                         while (true) {
                             try {
@@ -112,10 +134,18 @@ public class Main implements Runnable {
                             catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
+                            // 自分が接続したのち相手が接続したらゲーム開始
                             if (connected[enemy(player)]) {
-                                sendTo(player, "start");
+                                sendTo(player, "start"); // 開始の合図を送る
                                 try {
+                                    // 相手の終了(切断)を待つ
                                     th[enemy(player)].join();
+                                    /*
+                                     * 上の終了待ちでは
+                                     * 1. 相手から切断した
+                                     * 2. 自分が切断したせいで相手も切断された
+                                     * の2通りが該当する。以下は1.に関する処理を行う
+                                     */
                                     if(connected[player]) {
                                         sendTo(player, "disconnected");
                                         disconnect(player);
@@ -126,6 +156,7 @@ public class Main implements Runnable {
                                 }
                                 break;
                             }
+                            // 自分が切断していたら終了
                             else if(!connected[player]) {
                                 break;
                             }
@@ -136,61 +167,19 @@ public class Main implements Runnable {
         }
     }
 
-    @Override
-    public void run(){
-        // 入力を検知し、動作を実行するループ
-        while(connected[id]) {
-            try {
-                String read;
-                try {
-                    read = sender.readLine();
-                    // 切断されたら終了
-                    if(read == null || read.equals("exit")) {
-                        sendTo(id, "exit");
-                        disconnect(id);
-                        break;
-                    }
-                }
-                catch (SocketException e) {
-                    return;
-                }
-                doAction(read, id);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        try {
-            sockets[id].close();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static void disconnect(final int playerID) {
-//        System.out.println((playerID + 1) + "Pが切断されました");
-        gui.changeStatus(playerID, false);
-        try {
-            sockets[playerID].close();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-        connected[playerID] = false;
-        mapCount[playerID] = 0;
-    }
-
+    /**
+     * クライアントソケットを開設する
+     * @param playerID クライアントのID(0or1)
+     */
     private static void acceptPlayer(final int playerID) {
         try {
             System.out.println((playerID+1)+"Pの参加を待っています...");
-                sockets[playerID] = s.accept();
+            sockets[playerID] = s.accept();
             in[playerID] = new BufferedReader(new InputStreamReader(sockets[playerID].getInputStream()));
             out[playerID] = new PrintWriter(new BufferedWriter(new OutputStreamWriter(sockets[playerID].getOutputStream())),true);
             in[playerID].readLine();
             out[playerID].println(playerID);// プレイヤー番号を送信
             th[playerID] = new Thread(new Main(in[playerID], playerID));
-//            System.out.println((playerID+1)+"Pが参加しました");
             gui.changeStatus(playerID, true);
             connected[playerID] = true;
             th[playerID].start();
@@ -201,37 +190,59 @@ public class Main implements Runnable {
     }
 
     /**
+     * クライアント接続ソケットを閉じる
+     * @param playerID 閉じるクライアントのID(0or1)
+     */
+    private static void disconnect(final int playerID) {
+        gui.changeStatus(playerID, false); // GUIの「接続済み」を「未接続」に変える
+        // ソケットを閉じる
+        try {
+            sockets[playerID].close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        // フラグとカウントの初期化
+        connected[playerID] = false;
+        mapCount[playerID] = 0;
+    }
+
+    /**
      * Clientから送られてきた文字列に応じて処理を決定する
      * 上のmain()メソッド中で受け付けた時以外に，送られてくると考えられる情報
-     * ・fieldInfo  "field:<fieldInfo>"
-     * ・attackInfo "attack:<attackinfo>"
-     * ・nextMino   "next:<player>"
-     * ・the End of Game (未開発)
+     * ・妨害攻撃         "attack:lines"
+     * ・盤面情報         "field:fieldString"
+     * ・ホールドの通知    "hold:minoID"
+     * ・次のミノの要求    "next"
+     * ・レベルの通知      "level:levelInt"
+     * ・スコアの通知      "score:scoreInt"
+     * ・ゲームオーバー通知 "gameOver"
      */
     private void doAction(String str, int playerID){
         switch (str.charAt(0)){
-            case 'a':  // attackInfo
+            case 'a': // attack
                 sendTo(enemy(playerID), "attack:" + str.substring(7));
                 break;
-            case 'f':  // fieldInfo
+            case 'f': // field
                 sendTo(enemy(playerID), "enemyField:" + str.substring(6));
                 break;
-            case 'n': // nextMino
+            case 'n': // next
                 int minoCode = createMinoCode(playerID);
                 sendTo(playerID, "next:" + minoCode);
                 if(before != -1) sendTo(enemy(playerID), "enemyNext:" + before);
                 before = minoCode;
                 break;
-            case 'h':
+            case 'h': // hold
                 sendTo(enemy(playerID), "enemyHold:" + str.substring(5));
                 break;
-            case 'l':
+            case 'l': // level
                 sendTo(enemy(playerID), "enemyLevel:" + str.substring(6));
                 break;
-            case 's':
+            case 's': // score
                 sendTo(enemy(playerID), "enemyScore:" + str.substring(6));
                 break;
-            case 'g':
+            case 'g': // gameOver
+                // ほぼ同時にgameOverになったら、先に受信した方を敗者にする
                 synchronized(this) {
                     if(winnner != playerID) {
                         setWinnner(enemy(playerID));
@@ -241,12 +252,23 @@ public class Main implements Runnable {
         }
     }
 
+    /**
+     * winnerのsetterと、プレイヤーへの通知を担う
+     * @param player 勝者ID(0or1)
+     */
     private static void setWinnner(int player) {
+        // 勝者と敗者の通知
         sendTo(player, "win");
         sendTo(enemy(player), "lose");
+        // setter
         winnner = player;
     }
 
+    /**
+     * クライアントに文字列を送信する
+     * @param target ID(0or1)
+     * @param str String
+     */
     private static void sendTo(int target, String str) {
         out[target].println(str);
     }

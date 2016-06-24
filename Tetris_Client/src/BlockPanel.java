@@ -32,11 +32,19 @@ public class BlockPanel extends JPanel {
         }
     }
 
-    public void set(Tetromino nextBlock) {
-        this.mino = nextBlock;
+    /**
+     * パネルにテトロミノを表示する
+     * @param tetromino Tetrominoインスタンス
+     */
+    public void set(Tetromino tetromino) {
+        this.mino = tetromino;
         repaint();
     }
 
+    /**
+     * パネルにテトロミノを表示する
+     * @param blockID TetrominoのID
+     */
     public void set(int blockID) {
         this.mino = TetrominoManager.generate(blockID);
         repaint();
